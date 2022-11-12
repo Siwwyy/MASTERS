@@ -21,10 +21,22 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Config\Config.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Config\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Dataloader\__init__.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Dataset\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Losses\Loss_Base.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Losses\__init__.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="NeuralNetworks\NN_Base.py">
@@ -39,6 +51,8 @@
     <Folder Include="Dataloader\" />
     <Folder Include="NeuralNetworks\" />
     <Folder Include="Dataset\" />
+    <Folder Include="Losses\" />
+    <Folder Include="Config\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
