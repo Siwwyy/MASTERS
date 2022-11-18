@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import torch
 
-from typing import Union, Annotated
+from typing import Union, Annotated, Dict
+from pathlib import Path
 
 # TensorType = Annotated[torch.tensor, "Possible Tensor type"]
 # ShapeType = Annotated[Union[tuple, torch.Size], "Possible Shape types of the
@@ -13,11 +14,20 @@ from typing import Union, Annotated
 """
 TensorType = torch.tensor
 
-
 """ 
     Possible Shape types of the tensor
 """
 ShapeType = Union[tuple, torch.Size]
+
+""" 
+    Possible Path Type
+"""
+PathType = Union[str, Path]
+
+""" 
+    Possible Dict Type
+"""
+DictType = Union[dict, Dict]
 
 
 def try_gpu(gpu_idx: int = 0) -> torch.device:

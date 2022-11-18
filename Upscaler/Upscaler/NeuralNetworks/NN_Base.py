@@ -1,9 +1,22 @@
-import os
 import torch
-from torch import nn
-from torch.utils.data import DataLoader
-from torchvision import datasets, transforms
+import torch.nn as nn
+import torch.nn.functional as F
+
+from abc import ABCMeta, abstractmethod
+from Config.Config import TensorType, ShapeType
 
 
-class NN_Base(nn.Module):
-    """description of class"""
+class NN_Base(torch.nn.Module, metaclass=ABCMeta):
+    def __init__(
+        self, name: str = "NN_Base", input_shape: ShapeType = (1, 3, 1920, 1080)
+    ):
+        super().__init__()
+        self.name = name
+        self.input_shape = input_shape
+
+    @abstractmethod
+    def forward(self, x: TensorType = None) -> TensorType:
+        assert x is not None, "Input tensor X can't be None!"
+        raise NotImplementedError(
+            "Child class have to implement {} method".format(self.forward.__name__)
+        )

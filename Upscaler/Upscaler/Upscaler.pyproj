@@ -24,6 +24,9 @@
     <Compile Include="Config\Config.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Config\Config_Utils.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Config\__init__.py">
       <SubType>Code</SubType>
     </Compile>
@@ -42,17 +45,24 @@
     <Compile Include="NeuralNetworks\NN_Base.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="NeuralNetworks\UNet.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="NeuralNetworks\__init__.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Upscaler.py" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Config\config_yamls\" />
     <Folder Include="Dataloader\" />
     <Folder Include="NeuralNetworks\" />
     <Folder Include="Dataset\" />
     <Folder Include="Losses\" />
     <Folder Include="Config\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Config\config_yamls\config.yaml" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

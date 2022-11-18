@@ -15,8 +15,8 @@ class Loss_Base(torch.nn.Module, metaclass=ABCMeta):
 
     @abstractmethod
     def forward(self, x: TensorType = None, y_pred: TensorType = None) -> TensorType:
-        assert x is None, "Input tensor X can't be None!"
-        assert y_pred is None, "Input tensor Y_pred can't be None!"
+        assert x is not None, "Input tensor X can't be None!"
+        assert y_pred is not None, "Input tensor Y_pred can't be None!"
         raise NotImplementedError(
             "Child class have to implement {} method".format(self.forward.__name__)
         )
