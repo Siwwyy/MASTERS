@@ -4,6 +4,7 @@ import torch.nn.functional as F
 
 from abc import ABCMeta, abstractmethod
 from Config.Config import TensorType, ShapeType
+from typing import Optional
 
 
 class NN_Base(torch.nn.Module, metaclass=ABCMeta):
@@ -13,6 +14,7 @@ class NN_Base(torch.nn.Module, metaclass=ABCMeta):
         super().__init__()
         self.name = name
         self.input_shape = input_shape
+        self.nn: nn.Sequential = None
 
     @abstractmethod
     def forward(self, x: TensorType = None) -> TensorType:
@@ -20,3 +22,7 @@ class NN_Base(torch.nn.Module, metaclass=ABCMeta):
         raise NotImplementedError(
             "Child class have to implement {} method".format(self.forward.__name__)
         )
+
+    @abstractmethod
+    def _generate_architecture(self) -> Optional[nn.Sequential]:
+        return None
