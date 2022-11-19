@@ -27,7 +27,7 @@ class DoubleConv(nn.Module):
         return self.conv(x)
 
 
-class Model_UNET(NN_Base):
+class Model_UNET_Tut(NN_Base):
     def __init__(
         self,
         name: str = "Model_UNET",
@@ -37,31 +37,85 @@ class Model_UNET(NN_Base):
     ):
         super().__init__(name, input_shape)
 
-        # self.ups = nn.ModuleList()
-        # self.downs = nn.ModuleList()
-        # self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.ups = nn.ModuleList()
+        self.downs = nn.ModuleList()
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
 
-        # features = [64, 128, 256, 512]
-        ## Down part of UNET
-        # for feature in features:
-        #    self.downs.append(DoubleConv(in_channels, feature))
-        #    in_channels = feature
+        features = [64, 128, 256, 512]
+        # Down part of UNET
+        for feature in features:
+            self.downs.append(DoubleConv(in_channels, feature))
+            in_channels = feature
 
-        ## Up part of UNET
-        # for feature in reversed(features):
-        #    # feature * 2 -> because we will concatenate from Residual
-        #    self.ups.append(
-        #        nn.ConvTranspose2d(
-        #            feature * 2,
-        #            feature,
-        #            kernel_size=2,
-        #            stride=2,
-        #        )
-        #    )
-        #    self.ups.append(DoubleConv(feature * 2, feature))
+        # Up part of UNET
+        for feature in reversed(features):
+            # feature * 2 -> because we will concatenate from Residual
+            self.ups.append(
+                nn.ConvTranspose2d(
+                    feature * 2,
+                    feature,
+                    kernel_size=2,
+                    stride=2,
+                )
+            )
+            self.ups.append(DoubleConv(feature * 2, feature))
 
-        # self.bottleneck = DoubleConv(features[-1], features[-1] * 2)
-        # self.final_conv = nn.Conv2d(features[0], out_channels, kernel_size=1)
+        self.bottleneck = DoubleConv(features[-1], features[-1] * 2)
+        self.final_conv = nn.Conv2d(features[0], out_channels, kernel_size=1)
+
+    def forward(self, x: TensorType = None) -> TensorType:
+        assert x is not None, "Input tensor X can't be None!"
+        skip_connections = []
+
+        for down in self.downs:
+            x = down(x)
+            skip_connections.append(x)
+            x = self.pool(x)
+
+        x = self.bottleneck(x)
+        skip_connections = skip_connections[::-1]
+
+        for idx in range(0, len(self.ups), 2):
+            x = self.ups[idx](x)
+            skip_connection = skip_connections[idx // 2]
+
+            if x.shape != skip_connection.shape:
+                x = TVF.resize(x, size=skip_connection.shape[2:])
+
+            concat_skip = torch.cat((skip_connection, x), dim=1)
+            x = self.ups[idx + 1](concat_skip)
+
+        return self.final_conv(x)
+
+    def _generate_architecture(self) -> Optional[nn.Sequential]:
+        pass
+
+
+class Model_UNET(NN_Base):
+    """
+    A class used to represent an Animal
+
+    Attributes
+    ----------
+    name : str
+        Name of Model
+    input_shape : ShapeType (look at Config.py)
+        Input shape to the network
+    in_channels : str
+        Number of input channels to the network
+    out_channels : int
+        Number of output channels to the network
+    ----------
+    """
+
+    def __init__(
+        self,
+        name: str = "Model_UNET",
+        input_shape: ShapeType = (1, 3, 1920, 1080),
+        in_channels: int = 3,
+        out_channels: int = 3,
+    ):
+        super().__init__(name, input_shape)
 
         self.in_channels = in_channels
         self.out_channels = out_channels
@@ -70,28 +124,34 @@ class Model_UNET(NN_Base):
     def forward(self, x: TensorType = None) -> TensorType:
         assert x is not None, "Input tensor X can't be None!"
 
-        return x
-        # skip_connections = []
+        # Downsample part
+        for idx, downsample_layer in enumerate(self.downsample_part):
+            x = downsample_layer(x)
+            self.skip_connections.append(x)
+            x = self.max_pool(x)
 
-        # for down in self.downs:
-        #    x = down(x)
-        #    skip_connections.append(x)
-        #    x = self.pool(x)
+        # Bottleneck part (the deepest one)
+        x = self.bottleneck(x)
 
-        # x = self.bottleneck(x)
-        # skip_connections = skip_connections[::-1]
+        # Reverse skip_connections, because order of values is from begin to end
+        # so from last layer in upsample (which is output)
+        # self.skip_connections[:] = torch.flip(self.skip_connections, dims=0)
+        self.skip_connections = self.skip_connections[::-1]
 
-        # for idx in range(0, len(self.ups), 2):
-        #    x = self.ups[idx](x)
-        #    skip_connection = skip_connections[idx // 2]
+        # Upsample part
+        # We iterate with step=2, because we have: ConvTranspose2d, DoubleConv, ConvTranspose2d, ...
+        for idx in range(0, len(self.upsample_part), 2):
+            x = self.upsample_part[idx](x)
+            skip_connection = self.skip_connections[idx // 2]
 
-        #    if x.shape != skip_connection.shape:
-        #        x = TVF.resize(x, size=skip_connection.shape[2:])
+            # Concat part of upsampling
+            concat_skip_upsample = torch.cat(
+                [skip_connection, x], dim=1
+            )  # TODO tensor's shape differs!! maybe use a resizing?
 
-        #    concat_skip = torch.cat((skip_connection, x), dim=1)
-        #    x = self.ups[idx + 1](concat_skip)
+            x = self.upsample_part[idx + 1](x)
 
-        # return self.final_conv(x)
+        return self.final_conv(x)
 
     def _generate_architecture(self) -> Optional[nn.Sequential]:
 
@@ -103,26 +163,25 @@ class Model_UNET(NN_Base):
 
         # Uniform layers
         self.max_pool = nn.MaxPool2d(kernel_size=(2, 2), stride=2)
+        # self.skip_connections = torch.zeros(4) # for now, we have 4 skip connections
+        self.skip_connections = []  # for now, we have 4 skip connections
 
         # Generate downscample and upsample part
         temp_in_channels = self.in_channels
-        temp_out_channels = conv_features[
-            -1
-        ]  # -1 -> because we are building from first to last layer,
+        temp_out_channels = conv_features[-1]
+        # -1 -> because we are building from first to last layer,
         # so first layer of upsample part is 512
         for idx, features in enumerate(conv_features):
 
             # Downsample part
             self.downsample_part.append(DoubleConv(temp_in_channels, features))
-            self.downsample_part.append(self.max_pool)
+            # self.downsample_part.append(self.max_pool)
             temp_in_channels = features
 
             # Upsample part
-            conv_feature_reverse = conv_features[
-                (conv_features.size - 1) - idx
-            ]  # take elements from end to begin
-            # features * 2 -> because we will concatenate from downsample
-            # Residual, so we will have 2x more channels
+            conv_feature_reverse = conv_features[(conv_features.size - 1) - idx]
+            # take elements from end to begin
+            # features * 2 -> because we will concatenate from downsample Residual, so we will have 2x more channels
             self.upsample_part.append(
                 nn.ConvTranspose2d(
                     conv_feature_reverse * 2,
@@ -149,5 +208,14 @@ def test():
     # print(x.shape)
     # print(preds.shape)
     # assert preds.shape == x.shape
-    model = Model_UNET(in_channels=3, out_channels=3)
-    print(model)
+    x = torch.ones((1, 3, 1920, 1080))
+    # model = Model_UNET_Tut(in_channels=3, out_channels=3)
+    # preds = model(x)
+
+    model1 = Model_UNET(in_channels=3, out_channels=3)
+    preds1 = model1(x)
+
+    assert torch.allclose(preds, preds1), "predictions should be equal!"
+    assert preds.shape == x.shape
+    assert preds.shape == x.shape
+    assert preds1.shape == x.shape
