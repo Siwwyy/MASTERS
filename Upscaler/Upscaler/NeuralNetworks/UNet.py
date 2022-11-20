@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torchvision.transforms.functional as TVF
+import torchvision.transforms.functional as tvf
 
 from NeuralNetworks.NN_Base import NN_Base
 from Config.Config import TensorType, ShapeType
@@ -80,7 +80,7 @@ class Model_UNET_Tut(NN_Base):
             skip_connection = skip_connections[idx // 2]
 
             if x.shape != skip_connection.shape:
-                x = TVF.resize(x, size=skip_connection.shape[2:])
+                x = tvf.resize(x, size=skip_connection.shape[2:])
 
             concat_skip = torch.cat((skip_connection, x), dim=1)
             x = self.ups[idx + 1](concat_skip)
@@ -145,11 +145,14 @@ class Model_UNET(NN_Base):
             skip_connection = self.skip_connections[idx // 2]
 
             # Concat part of upsampling
-            concat_skip_upsample = torch.cat(
-                [skip_connection, x], dim=1
-            )  # TODO tensor's shape differs!! maybe use a resizing?
+            # TODO tensor's shape differs!! maybe use a resizing?
+            if skip_connection.shape != x.shape:
+                x = tvf.resize(
+                    x, size=(skip_connection.size(-2), skip_connection.size(-1))
+                )
+            concat_skip_upsample = torch.cat([skip_connection, x], dim=1)
 
-            x = self.upsample_part[idx + 1](x)
+            x = self.upsample_part[idx + 1](concat_skip_upsample)
 
         return self.final_conv(x)
 
@@ -168,9 +171,6 @@ class Model_UNET(NN_Base):
 
         # Generate downscample and upsample part
         temp_in_channels = self.in_channels
-        temp_out_channels = conv_features[-1]
-        # -1 -> because we are building from first to last layer,
-        # so first layer of upsample part is 512
         for idx, features in enumerate(conv_features):
 
             # Downsample part
@@ -179,8 +179,8 @@ class Model_UNET(NN_Base):
             temp_in_channels = features
 
             # Upsample part
-            conv_feature_reverse = conv_features[(conv_features.size - 1) - idx]
             # take elements from end to begin
+            conv_feature_reverse = conv_features[(conv_features.size - 1) - idx]
             # features * 2 -> because we will concatenate from downsample Residual, so we will have 2x more channels
             self.upsample_part.append(
                 nn.ConvTranspose2d(
@@ -191,31 +191,29 @@ class Model_UNET(NN_Base):
                 )
             )
             self.upsample_part.append(
-                DoubleConv(temp_out_channels, conv_feature_reverse)
+                DoubleConv(conv_feature_reverse * 2, conv_feature_reverse)
             )
-            temp_out_channels = conv_feature_reverse
 
         self.bottleneck = DoubleConv(conv_features[-1], conv_features[-1] * 2)
         self.final_conv = nn.Conv2d(
             conv_features[0], self.out_channels, kernel_size=1
         )  # 1x1 convolution at the end
 
+        # print(self)
+        # print(self)
+
 
 def test():
-    # x = torch.randn((1, 3, 1920, 1080))
-    # model = Model_UNET(in_channels=3, out_channels=3)
-    # preds = model(x)
-    # print(x.shape)
-    # print(preds.shape)
-    # assert preds.shape == x.shape
-    x = torch.ones((1, 3, 1920, 1080))
+    x = torch.randn((1, 3, 1920, 1080))
     # model = Model_UNET_Tut(in_channels=3, out_channels=3)
     # preds = model(x)
+    # print(model)
 
     model1 = Model_UNET(in_channels=3, out_channels=3)
     preds1 = model1(x)
-
-    assert torch.allclose(preds, preds1), "predictions should be equal!"
-    assert preds.shape == x.shape
-    assert preds.shape == x.shape
     assert preds1.shape == x.shape
+    assert preds1.shape == x.shape
+    # assert torch.allclose(preds, preds1), "predictions should be equal!"
+    # assert preds.shape == x.shape
+    # assert preds.shape == x.shape
+    # assert preds1.shape == x.shape
