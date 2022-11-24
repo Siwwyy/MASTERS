@@ -5,12 +5,24 @@ import torchvision.transforms.functional as tvf
 
 from NeuralNetworks.NN_Base import NN_Base
 from Config.Config import TensorType, ShapeType
-from typing import Optional
+from typing import Optional, Tuple
 
 import numpy as np
 
 
 class DoubleConv(nn.Module):
+    """
+    Double Conv Block of UNET
+
+    Attributes
+    ----------
+    in_channels : int
+        Amount of input channels to downsample block
+    out_channels : int
+        Amount of output channels to downsample block
+    ----------
+    """
+
     def __init__(self, in_channels: int, out_channels: int):
         super().__init__()
         self.conv = nn.Sequential(
@@ -27,73 +39,80 @@ class DoubleConv(nn.Module):
         return self.conv(x)
 
 
-class Model_UNET_Tut(NN_Base):
+class DownsampleBlock(nn.Module):
+    """
+    Downsample Block of UNET
+
+    Attributes
+    ----------
+    in_channels : int
+        Amount of input channels to downsample block
+    out_channels : int
+        Amount of output channels to downsample block
+    pool_layer: Optional[nn.Module]
+        Optional pooling layer for block, if not specified == nn.MaxPool2d(kernel_size=(2, 2), stride=2)
+    ----------
+    """
+
     def __init__(
         self,
-        name: str = "Model_UNET",
-        input_shape: ShapeType = (1, 3, 1920, 1080),
-        in_channels: int = 3,
-        out_channels: int = 3,
+        in_channels: int,
+        out_channels: int,
+        pool_layer: Optional[nn.Module] = None,
     ):
-        super().__init__(name, input_shape)
+        super().__init__()
+        self.conv = DoubleConv(in_channels, out_channels)
+        self.pool = pool_layer
+        if pool_layer is None:
+            self.pool = nn.MaxPool2d(kernel_size=(2, 2), stride=2)
 
-        self.ups = nn.ModuleList()
-        self.downs = nn.ModuleList()
-        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
-
-        features = [64, 128, 256, 512]
-        # Down part of UNET
-        for feature in features:
-            self.downs.append(DoubleConv(in_channels, feature))
-            in_channels = feature
-
-        # Up part of UNET
-        for feature in reversed(features):
-            # feature * 2 -> because we will concatenate from Residual
-            self.ups.append(
-                nn.ConvTranspose2d(
-                    feature * 2,
-                    feature,
-                    kernel_size=2,
-                    stride=2,
-                )
-            )
-            self.ups.append(DoubleConv(feature * 2, feature))
-
-        self.bottleneck = DoubleConv(features[-1], features[-1] * 2)
-        self.final_conv = nn.Conv2d(features[0], out_channels, kernel_size=1)
-
-    def forward(self, x: TensorType = None) -> TensorType:
+    def forward(self, x: TensorType = None) -> Tuple[TensorType, TensorType]:
         assert x is not None, "Input tensor X can't be None!"
-        skip_connections = []
 
-        for down in self.downs:
-            x = down(x)
-            skip_connections.append(x)
-            x = self.pool(x)
+        conv_out = self.conv(x).clone()
+        return self.pool(conv_out), conv_out
 
-        x = self.bottleneck(x)
-        skip_connections = skip_connections[::-1]
 
-        for idx in range(0, len(self.ups), 2):
-            x = self.ups[idx](x)
-            skip_connection = skip_connections[idx // 2]
+class UpsampleBlock(nn.Module):
+    """
+    Upsample Block of UNET
 
-            if x.shape != skip_connection.shape:
-                x = tvf.resize(x, size=skip_connection.shape[2:])
+    Attributes
+    ----------
+    in_channels : int
+        Amount of input channels to upsample block
+    out_channels : int
+        Amount of output channels to upsample block
+    ----------
+    """
 
-            concat_skip = torch.cat((skip_connection, x), dim=1)
-            x = self.ups[idx + 1](concat_skip)
+    def __init__(self, in_channels: int, out_channels: int):
+        super().__init__()
+        self.conv_transpose2d = nn.ConvTranspose2d(
+            in_channels, out_channels, kernel_size=2, stride=2
+        )
+        self.conv = DoubleConv(in_channels, out_channels)
 
-        return self.final_conv(x)
+    def forward(
+        self, x: TensorType = None, skip_connection: TensorType = None
+    ) -> TensorType:
+        assert (
+            x is not None and skip_connection is not None
+        ), "Input tensor X and skip_connection can't be None!"
 
-    def _generate_architecture(self) -> Optional[nn.Sequential]:
-        pass
+        x = self.conv_transpose2d(x)
+        # if shape of skip connection is not equal to input tensor, then just resize it
+        # It may differ with 2,1 pixels in dim, due to pooling (max pool)
+        if skip_connection.shape != x.shape:
+            x = tvf.resize(x, size=(skip_connection.size(-2), skip_connection.size(-1)))
+
+        x = torch.cat([skip_connection, x], dim=1)
+        return self.conv(x)
 
 
 class Model_UNET(NN_Base):
     """
-    A class used to represent an Animal
+    UNET architecture based model
 
     Attributes
     ----------
@@ -101,7 +120,7 @@ class Model_UNET(NN_Base):
         Name of Model
     input_shape : ShapeType (look at Config.py)
         Input shape to the network
-    in_channels : str
+    in_channels : int
         Number of input channels to the network
     out_channels : int
         Number of output channels to the network
@@ -117,103 +136,65 @@ class Model_UNET(NN_Base):
     ):
         super().__init__(name, input_shape)
 
+        # Uniforms
         self.in_channels = in_channels
         self.out_channels = out_channels
-        self._generate_architecture()
 
-    def forward(self, x: TensorType = None) -> TensorType:
-        assert x is not None, "Input tensor X can't be None!"
+        # Skip connections
+        self.skip_connections = []
 
-        # Downsample part
-        for idx, downsample_layer in enumerate(self.downsample_part):
-            x = downsample_layer(x)
-            self.skip_connections.append(x)
-            x = self.max_pool(x)
-
-        # Bottleneck part (the deepest one)
-        x = self.bottleneck(x)
-
-        # Reverse skip_connections, because order of values is from begin to end
-        # so from last layer in upsample (which is output)
-        # self.skip_connections[:] = torch.flip(self.skip_connections, dims=0)
-        self.skip_connections = self.skip_connections[::-1]
-
-        # Upsample part
-        # We iterate with step=2, because we have: ConvTranspose2d, DoubleConv, ConvTranspose2d, ...
-        for idx in range(0, len(self.upsample_part), 2):
-            x = self.upsample_part[idx](x)
-            skip_connection = self.skip_connections[idx // 2]
-
-            # Concat part of upsampling
-            # TODO tensor's shape differs!! maybe use a resizing?
-            if skip_connection.shape != x.shape:
-                x = tvf.resize(
-                    x, size=(skip_connection.size(-2), skip_connection.size(-1))
-                )
-            concat_skip_upsample = torch.cat([skip_connection, x], dim=1)
-
-            x = self.upsample_part[idx + 1](concat_skip_upsample)
-
-        return self.final_conv(x)
-
-    def _generate_architecture(self) -> Optional[nn.Sequential]:
-
+        # Amout of conv features per layer
         conv_features = np.array([64, 128, 256, 512], dtype=np.int32)
 
-        # Downsample and Upsample part
-        self.downsample_part = nn.ModuleList()
-        self.upsample_part = nn.ModuleList()
+        # Downsample layers
+        self.downsample_block1 = DownsampleBlock(in_channels, conv_features[0])
+        self.downsample_block2 = DownsampleBlock(conv_features[0], conv_features[1])
+        self.downsample_block3 = DownsampleBlock(conv_features[1], conv_features[2])
+        self.downsample_block4 = DownsampleBlock(conv_features[2], conv_features[3])
 
-        # Uniform layers
-        self.max_pool = nn.MaxPool2d(kernel_size=(2, 2), stride=2)
-        # self.skip_connections = torch.zeros(4) # for now, we have 4 skip connections
-        self.skip_connections = []  # for now, we have 4 skip connections
+        # Bottleneck layer
+        self.bottleneck = DoubleConv(conv_features[3], conv_features[3] * 2)
 
-        # Generate downscample and upsample part
-        temp_in_channels = self.in_channels
-        for idx, features in enumerate(conv_features):
+        # Upsample layers
+        self.upsample_block1 = UpsampleBlock(conv_features[3] * 2, conv_features[3])
+        self.upsample_block2 = UpsampleBlock(conv_features[2] * 2, conv_features[2])
+        self.upsample_block3 = UpsampleBlock(conv_features[1] * 2, conv_features[1])
+        self.upsample_block4 = UpsampleBlock(conv_features[0] * 2, conv_features[0])
 
-            # Downsample part
-            self.downsample_part.append(DoubleConv(temp_in_channels, features))
-            # self.downsample_part.append(self.max_pool)
-            temp_in_channels = features
-
-            # Upsample part
-            # take elements from end to begin
-            conv_feature_reverse = conv_features[(conv_features.size - 1) - idx]
-            # features * 2 -> because we will concatenate from downsample Residual, so we will have 2x more channels
-            self.upsample_part.append(
-                nn.ConvTranspose2d(
-                    conv_feature_reverse * 2,
-                    conv_feature_reverse,
-                    kernel_size=2,
-                    stride=2,
-                )
-            )
-            self.upsample_part.append(
-                DoubleConv(conv_feature_reverse * 2, conv_feature_reverse)
-            )
-
-        self.bottleneck = DoubleConv(conv_features[-1], conv_features[-1] * 2)
+        # Final convolution
         self.final_conv = nn.Conv2d(
             conv_features[0], self.out_channels, kernel_size=1
         )  # 1x1 convolution at the end
 
-        # print(self)
-        # print(self)
+    def forward(self, x: TensorType = None) -> TensorType:
+        assert x is not None, "Input tensor X can't be None!"
+
+        # Downsample
+        for idx in [1, 2, 3, 4]:
+            downsample_block = getattr(self, "downsample_block{}".format(idx))
+            x, x1 = downsample_block(x)
+            self.skip_connections.append(x1)
+
+        # Bottleneck
+        x = self.bottleneck(x)
+
+        # Upsample
+        for idx in [1, 2, 3, 4]:
+            upsample_block = getattr(self, "upsample_block{}".format(idx))
+            x = upsample_block(
+                x, self.skip_connections[len(self.skip_connections) - idx]
+            )
+
+        # Final, last conv
+        # TODO Add next conv, to reach upsampling. Right now: out shape == in shape. Should be -> 2x upsaling
+        return self.final_conv(x)
+
+    def _generate_architecture(self) -> Optional[nn.Sequential]:
+        pass
 
 
 def test():
     x = torch.randn((1, 3, 1920, 1080))
-    # model = Model_UNET_Tut(in_channels=3, out_channels=3)
-    # preds = model(x)
-    # print(model)
-
-    model1 = Model_UNET(in_channels=3, out_channels=3)
-    preds1 = model1(x)
-    assert preds1.shape == x.shape
-    assert preds1.shape == x.shape
-    # assert torch.allclose(preds, preds1), "predictions should be equal!"
-    # assert preds.shape == x.shape
-    # assert preds.shape == x.shape
-    # assert preds1.shape == x.shape
+    model = Model_UNET(in_channels=3, out_channels=3)
+    preds = model(x)
+    assert preds.shape == x.shape
