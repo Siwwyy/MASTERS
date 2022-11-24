@@ -14,7 +14,6 @@ class NN_Base(torch.nn.Module, metaclass=ABCMeta):
         super().__init__()
         self.name = name
         self.input_shape = input_shape
-        self.nn: nn.Sequential = None
 
     @abstractmethod
     def forward(self, x: TensorType = None) -> TensorType:
@@ -25,4 +24,4 @@ class NN_Base(torch.nn.Module, metaclass=ABCMeta):
 
     @abstractmethod
     def _generate_architecture(self) -> Optional[nn.Sequential]:
-        return None
+        pass
