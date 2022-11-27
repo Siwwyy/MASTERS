@@ -7,8 +7,11 @@ from Config.Config import *
 
 from NeuralNetworks.UNet import test
 
+# test()
 
-test()
+from Dataset.Dataset_UE import test_ds_ue
+
+test_ds_ue()
 
 
 if __name__ == "__main__":

@@ -34,6 +34,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Dataset\Dataset_Base.py" />
+    <Compile Include="Dataset\Dataset_UE.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Dataset\__init__.py">
       <SubType>Code</SubType>
     </Compile>
