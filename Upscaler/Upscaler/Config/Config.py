@@ -42,7 +42,7 @@ def try_gpu(gpu_idx: int = 0) -> torch.device:
     -------
         function returns GPU on specified index if exists, if not, CPU."""
     assert (
-        not torch.cuda.is_available()
+        torch.cuda.is_available()
     ), "CUDA is not available, Check if you have driver/software updates or proper NVIDIA GPU"
     if torch.cuda.device_count() >= gpu_idx + 1:
         return torch.device(f"cuda:{gpu_idx}")

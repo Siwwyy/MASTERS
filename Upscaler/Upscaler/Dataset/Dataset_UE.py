@@ -15,6 +15,46 @@ from typing import Optional, Tuple, Union
 from pathlib import Path
 
 
+
+def load_exr_file(absolute_path:str, channels_num:int=3, dtype:str="float16") -> TensorType:
+    """
+    Loading exr files
+
+    Attributes
+    ----------
+    absolute_path : PathType (Union[Path,str])
+        absolute path to .exr file
+    ----------
+    """
+
+    # Check if file under given path is correct
+    if not OpenEXR.isOpenExrFile(absolute_path):
+        raise ValueError(f'Image {absolute_path} is not a correct exr file')
+
+    OpenEXR_pixel_type = Imath.PixelType(Imath.PixelType.HALF)
+    Tensor_dtype = torch.float16
+    Numpy_dtype = np.float16
+    if dtype=="float32":
+        OpenEXR_pixel_type = Imath.PixelType(Imath.PixelType.FLOAT)
+        Tensor_dtype = torch.float32
+        Numpy_dtype = np.float32
+
+
+    channels = ["R", "G", "B"][:channels_num]
+
+    exr_file = OpenEXR.InputFile(str(absolute_path))
+    dw = exr_file.header()["dataWindow"]
+    size = (dw.max.x - dw.min.x + 1, dw.max.y - dw.min.y + 1)
+
+
+    # Read data and write into the pytorch tensor
+    out_tensor = torch.empty((channels_num, size[1], size[0]), dtype=Tensor_dtype)
+    for channel_idx, channel in enumerate(channels):
+        buffer = np.fromstring(exr_file.channel(channel, OpenEXR_pixel_type), dtype=Numpy_dtype)
+        out_tensor[channel_idx, ...] = torch.from_numpy(buffer.reshape(size[1], size[0]))
+
+    return out_tensor
+
 class Dataset_UE(Dataset_Base):
     """
     Dataset for data from Unreal Engine
@@ -62,7 +102,8 @@ class Dataset_UE(Dataset_Base):
         )
 
     def __len__(self) -> int:
-        return len(self.csv_file)
+        #return len(self.csv_file)
+        return 10
 
     def __getitem__(self, idx: int = None) -> Tuple[TensorType, TensorType]:
         assert idx is not None, "Index value can't be None! Should be an integer"
@@ -80,23 +121,7 @@ class Dataset_UE(Dataset_Base):
 
         # TODO WHOLE EXR LOADING UTILITY HAS TO BE MOVED TO SEPARATE FUNCTION e.g., load_exr!
         # lr file
-        lr_exr_file = OpenEXR.InputFile(str(abosolute_lr_path))
-        lr_dw = lr_exr_file.header()["dataWindow"]
-        size = (lr_dw.max.x - lr_dw.min.x + 1, lr_dw.max.y - lr_dw.min.y + 1)
-
-        # Read each channel of exr file
-        CHANNEL_BUFFER = np.zeros(
-            (len(Dataset_UE.channels), size[0] * size[1]), dtype=np.float16
-        )
-        for channel_idx, channel_buf in enumerate(
-            lr_exr_file.channels(Dataset_UE.channels)
-        ):
-            # If read channel is in supported channels, write it to main np buffer
-            CHANNEL_BUFFER[channel_idx] = np.frombuffer(channel_buf, dtype=np.float16)
-
-        lr_tensor = torch.from_numpy(
-            CHANNEL_BUFFER.reshape(len(Dataset_UE.channels), size[0], size[1])
-        )
+        lr_tensor = load_exr_file(str(abosolute_lr_path), 3)
 
         # hr file
         hr_exr_file = OpenEXR.InputFile(str(abosolute_hr_path))
@@ -128,5 +153,14 @@ def test_ds_ue():
         ),
     )
 
-    print(len(ds))
-    print(ds[5])
+    lr, hr = ds[5]
+    assert lr is not None and hr is not None, "Loaded EXR images can't be none!"
+
+    # fix exr loading, NaNs!!!!!!!
+    import matplotlib.pyplot as plt
+    # Plotting part
+    figure = plt.figure(figsize=(15, 20))
+    lr = lr * 5.
+    hr = hr * 5.
+    plt.imshow(hr.permute(1,2,0).to(dtype=torch.float32).cpu().detach().numpy())
+    plt.show()

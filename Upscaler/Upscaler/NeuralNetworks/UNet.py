@@ -140,11 +140,11 @@ class Model_UNET(NN_Base):
         self.in_channels = in_channels
         self.out_channels = out_channels
 
-        # Skip connections
-        self.skip_connections = []
-
         # Amout of conv features per layer
         conv_features = np.array([64, 128, 256, 512], dtype=np.int32)
+
+        # Skip connections
+        self.skip_connections = [torch.empty((1,1,1,1)), torch.empty((1,1,1,1)), torch.empty((1,1,1,1)), torch.empty((1,1,1,1))]
 
         # Downsample layers
         self.downsample_block1 = DownsampleBlock(in_channels, conv_features[0])
@@ -173,7 +173,7 @@ class Model_UNET(NN_Base):
         for idx in [1, 2, 3, 4]:
             downsample_block = getattr(self, "downsample_block{}".format(idx))
             x, x1 = downsample_block(x)
-            self.skip_connections.append(x1)
+            self.skip_connections[idx - 1] = x1
 
         # Bottleneck
         x = self.bottleneck(x)
