@@ -11,12 +11,12 @@ import Imath
 
 from Config.Config import TensorType, PathType
 from Dataset.Dataset_Base import Dataset_Base
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple, Union, List
 from pathlib import Path
 
 
 
-def load_exr_file(absolute_path:str, channels_num:int=3, dtype:str="float16") -> TensorType:
+def load_exr_file(absolute_path:str, channels:Optional[List[str]]=None, crop_coords:Optional[Tuple[int, int, int, int]]=None) -> TensorType:
     """
     Loading exr files
 
@@ -24,6 +24,10 @@ def load_exr_file(absolute_path:str, channels_num:int=3, dtype:str="float16") ->
     ----------
     absolute_path : PathType (Union[Path,str])
         absolute path to .exr file
+    channels: Optional[List[str]] (default is None)
+        channels to read, e.g., channels=["R", "G", "B"], channels=["R"] etc.
+    crop_coords: Optional[Tuple[int, int, int, int]]
+        x_min, x_max, y_min, y_max
     ----------
     """
 
@@ -31,29 +35,70 @@ def load_exr_file(absolute_path:str, channels_num:int=3, dtype:str="float16") ->
     if not OpenEXR.isOpenExrFile(absolute_path):
         raise ValueError(f'Image {absolute_path} is not a correct exr file')
 
-    OpenEXR_pixel_type = Imath.PixelType(Imath.PixelType.HALF)
-    Tensor_dtype = torch.float16
-    Numpy_dtype = np.float16
-    if dtype=="float32":
-        OpenEXR_pixel_type = Imath.PixelType(Imath.PixelType.FLOAT)
-        Tensor_dtype = torch.float32
-        Numpy_dtype = np.float32
+    if channels is None:
+        channels = ["R", "G", "B"]
 
-
-    channels = ["R", "G", "B"][:channels_num]
-
-    exr_file = OpenEXR.InputFile(str(absolute_path))
+    # Read header etc.
+    exr_file = OpenEXR.InputFile(absolute_path)
     dw = exr_file.header()["dataWindow"]
     size = (dw.max.x - dw.min.x + 1, dw.max.y - dw.min.y + 1)
 
+    if crop_coords is None:
+        crop_coords = (0, size[0], 0, size[1])
+
+    # Data type case
+    OpenEXR_pixel_type = Imath.PixelType(Imath.PixelType.FLOAT)
+    Numpy_dtype = np.float32
+    Torch_dtype = torch.float32
+    # check type of first channel to read EXR file with correct type
+    if list(exr_file.header()['channels'].values())[0].type == Imath.PixelType(Imath.PixelType.HALF):
+        OpenEXR_pixel_type = Imath.PixelType(Imath.PixelType.HALF)
+        Numpy_dtype = np.float16
+        Torch_dtype = torch.float16
 
     # Read data and write into the pytorch tensor
-    out_tensor = torch.empty((channels_num, size[1], size[0]), dtype=Tensor_dtype)
+    # (num_channels, x_max - x_min, y_max - y_min) -> final tensor shape
+    out_tensor = torch.empty((len(channels), crop_coords[3] - crop_coords[2], crop_coords[1] - crop_coords[0]), dtype=Torch_dtype)
     for channel_idx, channel in enumerate(channels):
         buffer = np.fromstring(exr_file.channel(channel, OpenEXR_pixel_type), dtype=Numpy_dtype)
-        out_tensor[channel_idx, ...] = torch.from_numpy(buffer.reshape(size[1], size[0]))
+        out_tensor[channel_idx, ...] = torch.from_numpy(buffer.reshape(size[1], size[0]))[crop_coords[2]:crop_coords[3], crop_coords[0]:crop_coords[1]]
 
     return out_tensor
+
+
+def save_exr(absolute_path:Path, tensor:TensorType=None, channels:Optional[List[str]]=None): #TODO make this working!
+    """
+    Loading exr files
+
+    Attributes
+    ----------
+    absolute_path : PathType (Union[Path,str])
+        absolute path to .exr file
+    dtype: str
+        data type of read exr, can be float16 or float32
+    channels: Optional[List[str]] (default is None)
+        channels to read, e.g., channels=["R", "G", "B"], channels=["R"] etc.
+    ----------
+    """
+    assert tensor is not None, "Tensor can't be None!"
+
+    if channels is None:
+        channels = ["R", "G", "B"]
+
+
+    hdr = OpenEXR.Header(w, h)
+    chan = Imath.Channel(Imath.PixelType(OpenEXR.HALF))
+    hdr['channels'] = {'R' : chan, 'G' : chan, 'B' : chan, 'A' : chan}
+    x = OpenEXR.OutputFile(absolute_path, hdr)
+    x.writePixels({'R': data, 'G': data, 'B': data, 'A' : data})
+    x.close()
+    #hdr = OpenEXR.Header(100, 100)
+    #for chans in [ set("a"), set(['foo', 'bar']), set("abcdefghijklmnopqstuvwxyz") ]:
+    #    hdr['channels'] = dict([(nm, Imath.Channel(Imath.PixelType(Imath.PixelType.FLOAT))) for nm in chans])
+    #    x = OpenEXR.OutputFile(absolute_path, hdr)
+    #    data = array('f', [0] * (100 * 100)).tobytes()
+    #    x.writePixels(dict([(nm, data) for nm in chans]))
+    #    x.close()
 
 class Dataset_UE(Dataset_Base):
     """
@@ -73,9 +118,7 @@ class Dataset_UE(Dataset_Base):
     """
 
     folder_structure = {"lr": Path("1920x1080-native"), "hr": Path("3840x2160-TAA")}
-
     subfolders_structure = {"lr": Path("SceneColor"), "hr": Path("TemporalAA")}
-
     channels = ["R", "G", "B"]  # for now, support only RGB, maybe alpha in future
 
     def __init__(
@@ -121,26 +164,10 @@ class Dataset_UE(Dataset_Base):
 
         # TODO WHOLE EXR LOADING UTILITY HAS TO BE MOVED TO SEPARATE FUNCTION e.g., load_exr!
         # lr file
-        lr_tensor = load_exr_file(str(abosolute_lr_path), 3)
+        lr_tensor = load_exr_file(str(abosolute_lr_path), channels)
 
         # hr file
-        hr_exr_file = OpenEXR.InputFile(str(abosolute_hr_path))
-        hr_dw = hr_exr_file.header()["dataWindow"]
-        size = (hr_dw.max.x - hr_dw.min.x + 1, hr_dw.max.y - hr_dw.min.y + 1)
-
-        # Read each channel of exr file
-        CHANNEL_BUFFER = np.zeros(
-            (len(Dataset_UE.channels), size[0] * size[1]), dtype=np.float16
-        )
-        for channel_idx, channel_buf in enumerate(
-            hr_exr_file.channels(Dataset_UE.channels)
-        ):
-            # If read channel is in supported channels, write it to main np buffer
-            CHANNEL_BUFFER[channel_idx] = np.frombuffer(channel_buf, dtype=np.float16)
-
-        hr_tensor = torch.from_numpy(
-            CHANNEL_BUFFER.reshape(len(Dataset_UE.channels), size[0], size[1])
-        )
+        hr_tensor = load_exr_file(str(abosolute_hr_path), channels)
 
         return (lr_tensor, hr_tensor)  # maybe, return dict?
 
@@ -162,5 +189,5 @@ def test_ds_ue():
     figure = plt.figure(figsize=(15, 20))
     lr = lr * 5.
     hr = hr * 5.
-    plt.imshow(hr.permute(1,2,0).to(dtype=torch.float32).cpu().detach().numpy())
+    plt.imshow(lr.permute(1,2,0).to(dtype=torch.float32).cpu().detach().numpy())
     plt.show()
