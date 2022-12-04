@@ -176,7 +176,7 @@ class Model_UNET(NN_Base):
             self.skip_connections[idx - 1] = x1
 
         # Bottleneck
-        x = self.bottleneck(x)
+        x = self.bottleneck(x).clone()
 
         # Upsample
         for idx in [1, 2, 3, 4]:
