@@ -41,7 +41,7 @@ in_channels = 3
 out_channels = 3
 learning_rate = 0.001
 batch_size = 64
-num_epochs = 20
+num_epochs = 30
 
 
 # Load Data
@@ -65,30 +65,33 @@ optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
 # Post Processing stage
 def tonemap_reinhard(hdr_tens:TensorType) -> TensorType:
-    return hdr_tens / (1. + hdr_tens)
+    hdr_tens[:] = hdr_tens / (1. + hdr_tens)
+    return hdr_tens.clip(min=1e-4)
 
 
 def detonemap_reinhard(ldr_tens:TensorType) -> TensorType:
-    return ldr_tens / (1. - ldr_tens).clip(min=1e-4)
+    ldr_tens[:] = ldr_tens / (1. - ldr_tens)
+    return ldr_tens.clip(min=1e-4)
 
-
+torch.set_printoptions(precision=32)
 def gamma_correction(ldr_tens:TensorType, gamma_coefficent:Union[TensorType, float]=2.2) -> TensorType:
     #assert torch.logical_and(ldr_tens.min() > 0., ldr_tens.max() < 1.  +
     #1e-05)
-    return torch.pow(ldr_tens, gamma_coefficent)
+    ldr_tens[:] = torch.pow(ldr_tens, gamma_coefficent)
+    return ldr_tens
 
 
 def postprocessing_pipeline(hdr_tens:TensorType, exposure:Union[TensorType, float]=0.5) -> TensorType:
     # 1./Exposure -> tonemap -> inverse gamma correction
     hdr_tens *= (1. / exposure)
-    hdr_tens = tonemap_reinhard(hdr_tens)
+    hdr_tens[:] = tonemap_reinhard(hdr_tens)
     return gamma_correction(hdr_tens, 1.0 / 2.2) #inverse gamma correction
 
 
 def depostprocessing_pipeline(ldr_tens:TensorType, exposure:Union[TensorType, float]=0.5) -> TensorType:
     # gamma correction -> detonemap -> Exposure
-    ldr_tens = gamma_correction(ldr_tens)
-    ldr_tens = detonemap_reinhard(ldr_tens)
+    ldr_tens[:] = gamma_correction(ldr_tens)
+    ldr_tens[:] = detonemap_reinhard(ldr_tens)
     ldr_tens *= exposure
     return ldr_tens
 
@@ -107,7 +110,7 @@ print("INFO: Used device: ", CurrentDevice)
 #    avg_train_loss = 0.0
 
 #    if epoch % 5 == 0:
-#        model_save_path = Path("E:/MASTERS/Upscaler/Models/model_float32.pth")
+#        model_save_path = Path("E:/MASTERS/Upscaler/Models/model_float32_epoch{}.pth".format(epoch))
 #        torch.save({
 #            'epoch': epoch,
 #            'batch_size': batch_size,
@@ -167,57 +170,66 @@ print("INFO: Used device: ", CurrentDevice)
 #plt.show()
 
 
-#model_save_path = Path("E:/MASTERS/Upscaler/Models/model_float32.pth")
+#model_save_path = Path("E:/MASTERS/Upscaler/Models/model_float32_epoch{}.pth".format(epoch))
 #torch.save({
-#            'epoch': epoch,
-#            'batch_size': batch_size,
-#            'lr': learning_rate,
-#            'Dataset': 'Dataset_UE',
-#            'model_state_dict': model.state_dict(),
-#            'optimizer_state_dict': optimizer.state_dict(),
-#            'loss': loss,
-#            }, 
-#           model_save_path)
+#    'epoch': epoch,
+#    'batch_size': batch_size,
+#    'lr': learning_rate,
+#    'Dataset': 'Dataset_UE',
+#    'model_state_dict': model.state_dict(),
+#    'optimizer_state_dict': optimizer.state_dict(),
+#    'loss': criterion.state_dict(),
+#    }, 
+#    model_save_path)
 
 
 
 
 # Inference time
-test_ds = Dataset_UE(ds_root_path=Path("E:/MASTERS/UE4/SubwaySequencer_4_26/DumpedBuffers"),
-        csv_root_path=Path("E:/MASTERS/UE4/SubwaySequencer_4_26/DumpedBuffers/info_Native.csv"),)
-#test_ds = Dataset_UE(ds_root_path=Path("E:/MASTERS/UE4/InfiltratorDemo_4_26_2/DumpedBuffers"),
-#        csv_root_path=Path("E:/MASTERS/UE4/InfiltratorDemo_4_26_2/DumpedBuffers/info_Native.csv"),)
+#test_ds = Dataset_UE(ds_root_path=Path("E:/MASTERS/UE4/SubwaySequencer_4_26/DumpedBuffers"),
+#        csv_root_path=Path("E:/MASTERS/UE4/SubwaySequencer_4_26/DumpedBuffers/info_Native.csv"),)
+test_ds = Dataset_UE(ds_root_path=Path("E:/MASTERS/UE4/InfiltratorDemo_4_26_2/DumpedBuffers"),
+        csv_root_path=Path("E:/MASTERS/UE4/InfiltratorDemo_4_26_2/DumpedBuffers/info_Native.csv"),)
 
-model.load_state_dict(torch.load(Path("E:/MASTERS/Upscaler/Models/model_float32.pth"))['model_state_dict'])
+model.load_state_dict(torch.load(Path("E:/MASTERS/Upscaler/Models/model_float32_epoch29.pth"))['model_state_dict'])
 
 model.eval()
 import matplotlib.pyplot as plt
 with torch.no_grad():
     # Plotting part
     figure = plt.figure(figsize=(20, 20))
-    lr, hr = test_ds[50]
-    lr = postprocessing_pipeline(lr).unsqueeze(0).to(device=CurrentDevice,
-    dtype=torch.float32)
+    lr, hr = test_ds[500]
+    lr = lr.to(dtype=torch.float32)
+    hr = hr.to(dtype=torch.float32)
+    clone_lr = lr.clone()
+    lr = postprocessing_pipeline(lr)
+    lr = lr.unsqueeze(0).to(device=CurrentDevice)
 
 
 
-    tens = load_exr_file("E:/MASTERS/UE4/00338.exr").unsqueeze(0).to(device=CurrentDevice,
-    dtype=torch.float32)
+    #tens = load_exr_file("E:/MASTERS/UE4/00338.exr").unsqueeze(0).to(device=CurrentDevice,
+    #dtype=torch.float32)
 
-    tens = postprocessing_pipeline(tens)
-    print(torch.isnan(tens).any())
-    pred = model(torch.nan_to_num(tens))
+    #tens = postprocessing_pipeline(tens)
+    #print(torch.isnan(tens).any())
+    print(torch.isnan(clone_lr).any())
+    print(torch.isnan(lr).any())
+    #pred = model(torch.nan_to_num(tens))
+    pred = model(lr)
     #pred = lr
     #plt.imshow(pred.squeeze(0).permute(1,2,0).to(dtype=torch.float32).cpu().detach().numpy())
     #plt.show()
 
-    save_exr("E:/MASTERS/Upscaler/Results/lr1.exr", depostprocessing_pipeline(tens).cpu().squeeze(0),
+    save_exr("E:/MASTERS/Upscaler/Results/orig_lr12.exr", clone_lr.cpu(),
     channels=["R", "G", "B"])
-    save_exr("E:/MASTERS/Upscaler/Results/pred_hdr1.exr",
+
+    save_exr("E:/MASTERS/Upscaler/Results/lr12.exr", depostprocessing_pipeline(lr).cpu().squeeze(0).half(),
+    channels=["R", "G", "B"])
+    save_exr("E:/MASTERS/Upscaler/Results/pred_hdr12.exr",
     pred.cpu().squeeze(0), channels=["R",
     "G", "B"])
 
-    save_exr("E:/MASTERS/Upscaler/Results/pred_ldr1.exr",
+    save_exr("E:/MASTERS/Upscaler/Results/pred_ldr12.exr",
     depostprocessing_pipeline(pred).cpu().squeeze(0).half(), channels=["R",
     "G", "B"])
 
