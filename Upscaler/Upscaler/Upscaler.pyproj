@@ -21,6 +21,12 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Colorspace\PreProcessing.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Colorspace\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Config\Config.py">
       <SubType>Code</SubType>
     </Compile>
@@ -40,6 +46,12 @@
     <Compile Include="Dataset\__init__.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Inference\Inference.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Inference\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Losses\Loss_Base.py">
       <SubType>Code</SubType>
     </Compile>
@@ -56,9 +68,18 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Upscaler.py" />
+    <Compile Include="Utils\Utils.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Utils\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Config\config_yamls\" />
+    <Folder Include="Inference\" />
+    <Folder Include="Colorspace\" />
+    <Folder Include="Utils\" />
     <Folder Include="Dataloader\" />
     <Folder Include="NeuralNetworks\" />
     <Folder Include="Dataset\" />

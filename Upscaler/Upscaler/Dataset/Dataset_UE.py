@@ -144,14 +144,19 @@ class Dataset_UE(Dataset_Base):
 
 
         self.crop_coords = crop_coords
+        self.crop_coords_hr = None
+        if self.crop_coords is not None:
+            self.crop_coords_hr = (crop_coords[0], crop_coords[1] + 128,
+                                    crop_coords[2], crop_coords[3] + 128)
         if self.crop_coords is None:
             # x_min, x_max, y_min, y_max
             self.crop_coords = (None, None, None, None)
+            self.crop_coords_hr = (None, None, None, None)
 
 
     def __len__(self) -> int:
         return len(self.csv_file)
-        #return 2
+        #return 64
 
     def __getitem__(self, idx: int = None) -> Tuple[TensorType, TensorType]:
         assert idx is not None, "Index value can't be None! Should be an integer"
@@ -171,7 +176,7 @@ class Dataset_UE(Dataset_Base):
         lr_tensor = load_exr_file(str(abosolute_lr_path), Dataset_UE.channels)[..., self.crop_coords[2]:self.crop_coords[3], self.crop_coords[0]:self.crop_coords[1]]
 
         # hr file
-        hr_tensor = load_exr_file(str(abosolute_hr_path), Dataset_UE.channels)[..., self.crop_coords[2]:self.crop_coords[3], self.crop_coords[0]:self.crop_coords[1]]
+        hr_tensor = load_exr_file(str(abosolute_hr_path), Dataset_UE.channels)[..., self.crop_coords_hr[2]:self.crop_coords_hr[3], self.crop_coords_hr[0]:self.crop_coords_hr[1]]
 
         # TODO, add pytorch transforms if needed
         return (lr_tensor, hr_tensor)  # maybe, return dict?

@@ -161,9 +161,15 @@ class Model_UNET(NN_Base):
         self.upsample_block3 = UpsampleBlock(conv_features[1] * 2, conv_features[1])
         self.upsample_block4 = UpsampleBlock(conv_features[0] * 2, conv_features[0])
 
+        # Last upsample conv
+        #self.upsample_block5 = UpsampleBlock(conv_features[0], conv_features[0] // 2)
+        self.upsample_block5 = nn.ConvTranspose2d(
+            conv_features[0], conv_features[0] // 2, kernel_size=2, stride=2
+        )
+
         # Final convolution
         self.final_conv = nn.Conv2d(
-            conv_features[0], self.out_channels, kernel_size=1
+            conv_features[0] // 2, self.out_channels, kernel_size=1
         )  # 1x1 convolution at the end
 
     def forward(self, x: TensorType = None) -> TensorType:
@@ -184,7 +190,9 @@ class Model_UNET(NN_Base):
             x = upsample_block(
                 x, self.skip_connections[len(self.skip_connections) - idx]
             )
+        
 
+        x = self.upsample_block5(x)
         # Final, last conv
         # TODO Add next conv, to reach upsampling. Right now: out shape == in shape. Should be -> 2x upsaling
         return self.final_conv(x)
