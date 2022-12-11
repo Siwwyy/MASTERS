@@ -5,7 +5,7 @@ from Config.Config import PathType, TensorType
 
 import torch
 
-Exposure_Coefficient = 0.1
+Exposure_Coefficient = 0.5
 Gamma_Coefficient = 2.2
 
 # Pre Processing input to the network stage

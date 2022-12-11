@@ -26,7 +26,7 @@ def Inference_pipeline(outputs_save_path:PathType=None, model:NN_Base=None, data
     with torch.no_grad():
 
         #load test inputs
-        lr, hr = dataset[5]
+        lr, hr = dataset[20]
 
         # model is trained with float32 precision for now
         lr, hr = lr.to(dtype=torch.float32), hr.to(dtype=torch.float32)

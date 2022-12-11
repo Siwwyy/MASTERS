@@ -53,3 +53,36 @@ def try_gpu(gpu_idx: int = 0) -> torch.device:
     Currently used device
 """
 CurrentDevice: torch.device = try_gpu(gpu_idx=0)
+
+
+from datetime import date
+""" 
+    Training ,inference ... results saving path
+"""
+
+def GetResultsPath(result_date:date=None) -> Path:
+    if result_date is None: result_date = date.today()
+    return_path = Path("E:/MASTERS/Upscaler/Results/{}".format(result_date)) 
+    if not return_path.exists():
+        return_path.mkdir()
+    return return_path
+
+ResultsPath = GetResultsPath()
+
+
+def GetTrainingsPath(directory:Path=ResultsPath, stem:PathType="baseline") -> Path:
+    return_path = Path(directory/"Trainings"/stem)
+    if not return_path.exists():
+        return_path.mkdir(parents=True)
+    return return_path
+
+TrainingsPath = GetTrainingsPath()
+
+
+def GetInferenceResultsPath(directory:Path=ResultsPath, stem:PathType="baseline") -> Path:
+    return_path = Path(directory/"InferenceResults"/stem)
+    if not return_path.exists():
+        return_path.mkdir(parents=True)
+    return return_path
+
+InferenceResultsPath = GetInferenceResultsPath()

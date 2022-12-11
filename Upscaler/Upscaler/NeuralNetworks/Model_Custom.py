@@ -1,3 +1,4 @@
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -110,7 +111,7 @@ class UpsampleBlock(nn.Module):
         return self.conv(x)
 
 
-class Model_UNET(NN_Base):
+class Model_Custom(NN_Base):
     """
     UNET architecture based model
 
@@ -129,7 +130,7 @@ class Model_UNET(NN_Base):
 
     def __init__(
         self,
-        name: str = "Model_UNET",
+        name: str = "Model_Custom",
         input_shape: ShapeType = (1, 3, 1920, 1080),
         in_channels: int = 3,
         out_channels: int = 3,
@@ -141,7 +142,8 @@ class Model_UNET(NN_Base):
         self.out_channels = out_channels
 
         # Amout of conv features per layer
-        conv_features = np.array([64, 128, 256, 512], dtype=np.int32)
+        divider = 8
+        conv_features = np.array([64//divider, 128//divider, 256//divider, 512//divider], dtype=np.int32)
 
         # Skip connections
         self.skip_connections = [torch.empty((1,1,1,1)), torch.empty((1,1,1,1)), torch.empty((1,1,1,1)), torch.empty((1,1,1,1))]

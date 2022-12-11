@@ -146,8 +146,10 @@ class Dataset_UE(Dataset_Base):
         self.crop_coords = crop_coords
         self.crop_coords_hr = None
         if self.crop_coords is not None:
-            self.crop_coords_hr = (crop_coords[0], crop_coords[1] + 128,
-                                    crop_coords[2], crop_coords[3] + 128)
+            self.crop_coords_hr = (crop_coords[0] * 2, crop_coords[1] * 2,
+                                    crop_coords[2] * 2, crop_coords[3] * 2)
+            #self.crop_coords_hr = *(self.crop_coords[:] * 2,)
+
         if self.crop_coords is None:
             # x_min, x_max, y_min, y_max
             self.crop_coords = (None, None, None, None)

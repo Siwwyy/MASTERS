@@ -58,6 +58,9 @@
     <Compile Include="Losses\__init__.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="NeuralNetworks\Model_Custom.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="NeuralNetworks\NN_Base.py">
       <SubType>Code</SubType>
     </Compile>
@@ -65,6 +68,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="NeuralNetworks\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Training_Pipeline.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Upscaler.py" />
