@@ -8,7 +8,12 @@ import torch
 
 
 
-state_dict_type = Dict[str, Union[str, dict, int, float]]
+state_dict_type = Dict[str, Union[str, dict, int, float, ...]]
+
+'''
+    Current saving dict format
+'''
+
 
 def load_model(load_path:PathType=None) -> state_dict_type:
     assert load_path is not None, "Path can't be None! Please specify absolute path to save model"
