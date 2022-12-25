@@ -142,7 +142,7 @@ class Model_Custom(NN_Base):
         self.out_channels = out_channels
 
         # Amout of conv features per layer
-        divider = 8
+        divider = 4
         conv_features = np.array([64//divider, 128//divider, 256//divider, 512//divider], dtype=np.int32)
 
         # Skip connections

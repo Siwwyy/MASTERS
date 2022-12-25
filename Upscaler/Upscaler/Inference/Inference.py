@@ -1,23 +1,18 @@
 
 
-from typing import Dict, Union
-from pathlib import Path
-from Config.Config import PathType, CurrentDevice
-from NeuralNetworks.NN_Base import NN_Base
-from Dataset.Dataset_Base import Dataset_Base
-from Dataset.Dataset_UE import save_exr
-from Colorspace.PreProcessing import preprocessing_pipeline, depreprocessing_pipeline
+from typing                     import Dict, Union
+from pathlib                    import Path
+from Config.Config              import PathType, CurrentDevice
+from NeuralNetworks.NN_Base     import NN_Base
+from Dataset.Dataset_Base       import Dataset_Base
+from Dataset.Dataset_UE         import save_exr
+from Colorspace.PreProcessing   import preprocessing_pipeline, depreprocessing_pipeline
 
 import torch
-
-
 
 def Inference_pipeline(outputs_save_path:PathType=None, model:NN_Base=None, dataset:Dataset_Base=None, device=CurrentDevice):
     
     assert model is not None and dataset is not None, "Model and Dataset has to be provided as an argument"
-
-    if type(outputs_save_path) is str:
-        outputs_save_path = Path(outputs_save_path)
 
     # turn on eval mode of model and turn off requires grad!
     model.eval()
