@@ -197,9 +197,6 @@ class Model_UNET(NN_Base):
         # TODO Add next conv, to reach upsampling. Right now: out shape == in shape. Should be -> 2x upsaling
         return self.final_conv(x)
 
-    def _generate_architecture(self) -> Optional[nn.Sequential]:
-        pass
-
 
 def test():
     x = torch.randn((1, 3, 3840, 2160))

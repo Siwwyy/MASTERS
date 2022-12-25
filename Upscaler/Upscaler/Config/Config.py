@@ -1,9 +1,9 @@
-from __future__ import annotations
+
+from __future__     import annotations
+from typing         import Union, Annotated, Dict
+from pathlib        import Path
 
 import torch
-
-from typing import Union, Annotated, Dict
-from pathlib import Path
 
 # TensorType = Annotated[torch.tensor, "Possible Tensor type"]
 # ShapeType = Annotated[Union[tuple, torch.Size], "Possible Shape types of the
@@ -79,10 +79,10 @@ def GetTrainingsPath(directory:Path=ResultsPath, stem:PathType="baseline") -> Pa
 TrainingsPath = GetTrainingsPath()
 
 
-def GetInferenceResultsPath(directory:Path=ResultsPath, stem:PathType="baseline") -> Path:
-    return_path = Path(directory/"InferenceResults"/stem)
+def GetInferencePath(directory:Path=ResultsPath, stem:PathType="baseline") -> Path:
+    return_path = Path(directory/"Inference"/stem)
     if not return_path.exists():
         return_path.mkdir(parents=True)
     return return_path
 
-InferenceResultsPath = GetInferenceResultsPath()
+InferenceResultsPath = GetInferencePath()

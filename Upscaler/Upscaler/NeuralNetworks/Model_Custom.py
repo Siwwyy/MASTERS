@@ -142,7 +142,7 @@ class Model_Custom(NN_Base):
         self.out_channels = out_channels
 
         # Amout of conv features per layer
-        divider = 4
+        divider = 8
         conv_features = np.array([64//divider, 128//divider, 256//divider, 512//divider], dtype=np.int32)
 
         # Skip connections
@@ -198,9 +198,6 @@ class Model_Custom(NN_Base):
         # Final, last conv
         # TODO Add next conv, to reach upsampling. Right now: out shape == in shape. Should be -> 2x upsaling
         return self.final_conv(x)
-
-    def _generate_architecture(self) -> Optional[nn.Sequential]:
-        pass
 
 
 def test():

@@ -13,25 +13,16 @@ from Colorspace.PreProcessing       import preprocessing_pipeline, depreprocessi
 from NeuralNetworks.UNet            import Model_UNET
 from NeuralNetworks.Model_Custom    import Model_Custom
 from Utils.Utils                    import save_model, load_model
+from Config.TrainingConfig          import ModelHyperparameters, TrainingDictType
 
 # Libs imports
 from torch              import optim       # For optimizers like SGD, Adam, etc.
-from torch.utils.data   import DataLoader  # Gives easier dataset managment by creating mini batches etc.
+from torch.utils.data   import DataLoader
 import torch
 import torch.nn as nn
-import torchvision.transforms.functional as tvf
 
 torch.backends.cudnn.benchmark = True
 torch.backends.cudnn.enabled = True
-
-
-@dataclass()
-class ModelHyperparameters:
-    in_channels :int = 3
-    out_channels :int = 3
-    learning_rate :float = 0.001
-    batch_size :int = 32
-    num_epochs :int = 15
 
 
 def save_checkpoint(model_save_path:PathType=None,
@@ -56,126 +47,21 @@ def save_checkpoint(model_save_path:PathType=None,
 
 
 
-def training_pipeline(training:bool=True, model_load:bool=False, device=CurrentDevice, dtype=torch.float32) -> NN_Base:
-    
-    # Hyperparameters
-    hyperparams = ModelHyperparameters()
-
-    # Load Data
-    train_ds = Dataset_UE(ds_root_path=Path("E:/MASTERS/UE4/SubwaySequencer_4_26/DumpedBuffers"),
-            csv_root_path=Path("E:/MASTERS/UE4/SubwaySequencer_4_26/DumpedBuffers/info_Native.csv"),
-            #crop width x height == 128x128 (for now)
-            crop_coords=(900, 1028, 500, 628))
-
-    # Create dataloader
-    train_loader = DataLoader(dataset=train_ds, batch_size=hyperparams.batch_size, drop_last=True, pin_memory=True)
-
-
-    # Initialize network
-    model = Model_UNET(in_channels=hyperparams.in_channels, out_channels=hyperparams.out_channels).to(device=device, dtype=dtype)
-
-    # Loss and optimizer
-    criterion = nn.MSELoss()
-    optimizer = optim.Adam(model.parameters(), lr=hyperparams.learning_rate)
-    
-    if model_load:
-        loaded_training_state_dict = load_model(Path("E:/MASTERS/Upscaler/Results/2022-12-11/Trainings/baseline/model_float32_final.pth"))
-        model.load_state_dict(loaded_training_state_dict['model_state_dict'])
-        optimizer.load_state_dict(loaded_training_state_dict['optimizer_state_dict'])
-
-    if not training:
-        return model
-
-
-    # Train Network
-    avg_loss_per_epoch = []
-    model.train() # prep model for training
-    for epoch in range(hyperparams.num_epochs):
-
-        #Log pass
-        print('Epoch: %03d' % (epoch + 1), end="\n")
-        avg_train_loss = 0.0
-
-        if epoch % 5 == 0 or epoch == 1:
-            # TODO make better saving pipeline
-            model_save_path = Path(TrainingsPath/"model_float32_epoch{}.pth".format(epoch))
-            save_model(model_save_path, 
-                {
-                'epoch': epoch,
-                'batch_size': hyperparams.batch_size,
-                'lr': hyperparams.learning_rate,
-                'Dataset': 'Dataset_UE',
-                'model_state_dict': model.state_dict(),
-                'optimizer_state_dict': optimizer.state_dict(),
-                'loss': criterion.state_dict(),
-                })
-
-
-        for batch_idx, (data, target) in enumerate(tqdm(train_loader)):
-
-            #Zero gradients
-            optimizer.zero_grad()
-
-            # Get data to cuda if possible
-            data = data.to(device=device, dtype=dtype)
-            target = target.to(device=device, dtype=dtype)
-
-            # PreProcess the data
-            data = preprocessing_pipeline(data)
-            target = preprocessing_pipeline(target)
-
-            # forward
-            pred = model(data)
-            loss = criterion(pred, target)
-
-            # accumulate loss, loss * amount N batch size
-            avg_train_loss += loss.item() * data.size(0)
-
-            # loss backward and optimizer
-            loss.backward()
-            optimizer.step()
-
-        # divide avg train loss by length of data loader sampler
-        # it will give a correct avg loss
-        # if divided by batch_size, then sometimes it may be not correct,
-        # because batch_size is sometimes not dividable by num of samples
-        avg_train_loss = avg_train_loss / len(train_loader.sampler)
-        avg_loss_per_epoch.append(avg_train_loss)
-
-        #Log pass
-        print(' Avg loss: %.3f' % avg_train_loss, end="\n")
-
-
-    import matplotlib.pyplot as plt
-    # summarize history for loss after training
-    fig, axs = plt.subplots(figsize = (20,6))
-    plt.plot(avg_loss_per_epoch)
-    plt.title('model loss')
+# summarize history for loss
+import matplotlib.pyplot as plt
+def plot_loss_valid(train_loss:list=None, valid_loss:list=None, epochs:int=10):
+    fig, ax = plt.subplots(figsize = (20,6))
+    plt.plot(range(1,epochs+1), train_loss, 'b', label='Training loss')
+    plt.plot(range(1,epochs+1), valid_loss, 'c', label='Validation loss')
+    plt.title('Training and validation accuracy')
     plt.ylabel('loss')
     plt.xlabel('epoch')
-    plt.legend(['train', 'test'], loc='upper left')
+    plt.legend(['train', 'valid'], loc='upper left')
     plt.show()
 
 
-    model_save_path = Path(TrainingsPath/"model_float32_final.pth")
-    save_model(model_save_path, 
-    {
-    'epoch': hyperparams.num_epochs,
-    'batch_size': hyperparams.batch_size,
-    'lr': hyperparams.learning_rate,
-    'Dataset': 'Dataset_UE',
-    'model_state_dict': model.state_dict(),
-    'optimizer_state_dict': optimizer.state_dict(),
-    'loss': criterion.state_dict(),
-    })
 
-    return model
-
-
-
-from Config.TrainingConfig import TrainingDictType
-
-def new_training_pipeline(TrainingConfigDict:TrainingDictType=None, 
+def training_pipeline(TrainingConfigDict:TrainingDictType=None, 
                           training:bool=True, 
                           model_load:bool=False) -> NN_Base:
     """
@@ -186,6 +72,7 @@ def new_training_pipeline(TrainingConfigDict:TrainingDictType=None,
     hyperparams =   TrainingConfigDict['hyperparams']
     train_ds =      TrainingConfigDict['train_ds']
     train_loader =  TrainingConfigDict['train_dataloader']
+    valid_loader =  TrainingConfigDict['valid_dataloader']
     model =         TrainingConfigDict['model']
     criterion =     TrainingConfigDict['criterion']
     optimizer =     TrainingConfigDict['optimizer']
@@ -198,85 +85,116 @@ def new_training_pipeline(TrainingConfigDict:TrainingDictType=None,
 
     # Load checkpoint or not
     if model_load:
-        loaded_training_state_dict = load_model(Path("E:/MASTERS/Upscaler/Results/2022-12-11/Trainings/baseline/model_float32_final.pth"))
+        loaded_training_state_dict = load_model(TrainingConfigDict['model_load_path'])
         model.load_state_dict(loaded_training_state_dict['model_state_dict'])
         optimizer.load_state_dict(loaded_training_state_dict['optimizer_state_dict'])
 
     # Train Network
-    avg_loss_per_epoch = []
-    model.train() # prep model for training
+    avg_train_loss_per_epoch = []
+    avg_valid_loss_per_epoch = []
+    min_valid_loss = 9999.9
     for epoch in range(hyperparams.num_epochs):
 
         #Log pass
         print('Epoch: %03d' % (epoch + 1), end="\n")
-        
-        
 
-        if epoch % 5 == 0 or epoch == 1:
-            # TODO make better saving pipeline, e.g., after valid loss better
-            save_checkpoint(TrainingsPath/"custom/",
-                            "model_float32_epoch{}".format(str(epoch)),
-                            epoch,
-                            model,
-                            hyperparams,
-                            optimizer)
-
-        # Training pipeline
-        avg_train_loss = 0.0
+        #####################  
+        # Training Pipeline #
+        #####################
+        total_train_loss = 0.0
+        model.train() # prepare model for training
         for batch_idx, (data, target) in enumerate(tqdm(train_loader)):
 
             #Zero gradients
             optimizer.zero_grad()
 
             # Get data to cuda if possible
-            data = data.to(device=device, dtype=dtype)
-            target = target.to(device=device, dtype=dtype)
+            data    = data.to(device=device, dtype=dtype)
+            target  = target.to(device=device, dtype=dtype)
+
+
+            #save_exr(str("E:/MASTERS/TEST/DATA/HDR/data_hdr_iter{}.exr".format(batch_idx * epoch + batch_idx)), data.squeeze(0).cpu().half())
+            #save_exr(str("E:/MASTERS/TEST/TARGET/HDR/target_hdr_iter{}.exr".format(batch_idx * epoch + batch_idx)), target.squeeze(0).cpu().half())
 
             # PreProcess the data
-            data = preprocessing_pipeline(data)
-            target = preprocessing_pipeline(target)
+            data    = preprocessing_pipeline(data)
+            target  = preprocessing_pipeline(target)
+
+            #save_exr(str("E:/MASTERS/TEST/DATA/LDR/data_ldr_iter{}.exr".format(batch_idx * epoch + batch_idx)), data.squeeze(0).cpu().half())
+            #save_exr(str("E:/MASTERS/TEST/TARGET/LDR/target_ldr_iter{}.exr".format(batch_idx * epoch + batch_idx)), target.squeeze(0).cpu().half())
 
             # forward
             pred = model(data)
             loss = criterion(pred, target)
 
             # accumulate loss, loss * amount N batch size
-            avg_train_loss += loss.item() * data.size(0)
+            total_train_loss += loss.item() * data.size(0)
 
             # loss backward and optimizer
             loss.backward()
             optimizer.step()
-        
-        # divide avg train loss by length of data loader sampler
+
+
+        #######################  
+        # Validating Pipeline #
+        #######################
+        total_valid_loss = 0.0
+        model.eval() # prepare model for validation
+        with torch.no_grad():
+            for batch_idx, (data, target) in enumerate(tqdm(valid_loader)):
+
+                # Get data to cuda if possible
+                data    = data.to(device=device, dtype=dtype)
+                target  = target.to(device=device, dtype=dtype)
+
+                # PreProcess the data
+                data    = preprocessing_pipeline(data)
+                target  = preprocessing_pipeline(target)
+                save_exr(str("E:/MASTERS/TEST/DATA/LDR/data_ldr_iter{}.exr".format(batch_idx * epoch + batch_idx)), data.squeeze(0).cpu().half())
+                save_exr(str("E:/MASTERS/TEST/TARGET/LDR/target_ldr_iter{}.exr".format(batch_idx * epoch + batch_idx)), target.squeeze(0).cpu().half())
+                # forward
+                pred = model(data)
+                loss = criterion(pred, target)
+
+                # accumulate loss, loss * amount N batch size
+                total_valid_loss += loss.item() * data.size(0)
+
+
+        # divide avg train/valid loss by length of data loader
         # it will give a correct avg loss
         # if divided by batch_size, then sometimes it may be not correct,
         # because batch_size is sometimes not dividable by num of samples
-        avg_train_loss = avg_train_loss / len(train_loader.sampler)
-        avg_loss_per_epoch.append(avg_train_loss)
+        total_train_loss = total_train_loss / len(train_loader)
+        total_valid_loss = total_valid_loss / len(valid_loader)
+        avg_train_loss_per_epoch.append(total_train_loss)
+        avg_valid_loss_per_epoch.append(total_valid_loss)
 
-
-        # Validation pipeline
-        #...
-
+        # Model's Checkpoint saving
+        if min_valid_loss > total_valid_loss:
+            min_valid_loss = total_valid_loss
+            save_checkpoint(TrainingConfigDict['model_save_path'],
+                            "model_float32_epoch{}".format(str(epoch)),
+                            epoch,
+                            model,
+                            hyperparams,
+                            optimizer)
+            print("Checkpoint saved at {} epoch with {:.4f} total valid loss".format(epoch, total_valid_loss))
 
         #Log pass
-        print(' Avg loss: %.3f' % avg_train_loss, end="\n")
+        print()
+        print(' Total train loss: %.4f' % total_train_loss, end="\n")
+        print(' Total valid loss: %.4f' % total_valid_loss, end="\n")
+        print()
 
+    # Plot train and valid loss at n epochs
+    plot_loss_valid(avg_train_loss_per_epoch, 
+                    avg_valid_loss_per_epoch,
+                    hyperparams.num_epochs)
 
-    import matplotlib.pyplot as plt
-    # summarize history for loss after training
-    fig, axs = plt.subplots(figsize = (20,6))
-    plt.plot(avg_loss_per_epoch)
-    plt.title('model loss')
-    plt.ylabel('loss')
-    plt.xlabel('epoch')
-    plt.legend(['train', 'test'], loc='upper left')
-    plt.show()
-
-
-    save_checkpoint(TrainingsPath/"custom/",
+    # Save model's checkpoint
+    save_checkpoint(TrainingConfigDict['model_save_path'],
                     "model_float32_final",
-                    epoch,
+                    hyperparams.num_epochs,
                     model,
                     hyperparams,
                     optimizer)

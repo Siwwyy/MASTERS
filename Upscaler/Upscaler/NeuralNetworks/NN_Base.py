@@ -22,6 +22,5 @@ class NN_Base(torch.nn.Module, metaclass=ABCMeta):
             "Child class have to implement {} method".format(self.forward.__name__)
         )
 
-    @abstractmethod
-    def _generate_architecture(self) -> Optional[nn.Sequential]:
-        pass
+    def __repr__(self):
+        return self.name

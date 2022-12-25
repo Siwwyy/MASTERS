@@ -4,7 +4,7 @@ from NeuralNetworks.UNet                import Model_UNET
 from NeuralNetworks.Model_Custom        import Model_Custom
 from Dataset.Dataset_Base               import Dataset_Base
 from Dataset.Dataset_UE                 import Dataset_UE
-from Config.Config                      import CurrentDevice
+from Config.Config                      import CurrentDevice, GetTrainingsPath, GetInferencePath
 
 from dataclasses                        import dataclass,astuple
 from torch.utils.data                   import DataLoader
@@ -43,20 +43,28 @@ def GetDefaultTrainingDict() -> TrainingDictType:
 
     dtype = torch.float32
     hyperparams = ModelHyperparameters()
-    # Create Dataset
+
+    # Create Dataset for training and validating
     train_ds = Dataset_UE(ds_root_path=Path("E:/MASTERS/UE4/SubwaySequencer_4_26/DumpedBuffers"),
                           csv_root_path=Path("E:/MASTERS/UE4/SubwaySequencer_4_26/DumpedBuffers/info_Native.csv"),
                           #crop width x height == 128x128 (for now)
                           crop_coords=(900, 1028, 500, 628))
-    # Create dataloader
-    train_loader = DataLoader(dataset=train_ds, batch_size=hyperparams.batch_size, drop_last=True,                                    pin_memory=True)
+
+    valid_ds = Dataset_UE(ds_root_path=Path("E:/MASTERS/UE4/InfiltratorDemo_4_26_2/DumpedBuffers"),
+                          csv_root_path=Path("E:/MASTERS/UE4/InfiltratorDemo_4_26_2/DumpedBuffers/info_Native.csv"),
+                          #crop width x height == 128x128 (for now)
+                          crop_coords=(900, 1028, 500, 628))
+
+    # Create dataloader for training and validating
+    train_loader = DataLoader(dataset=train_ds, batch_size=hyperparams.batch_size, shuffle=True, drop_last=True, pin_memory=True)
+    valid_loader = DataLoader(dataset=valid_ds, batch_size=hyperparams.batch_size, shuffle=True, drop_last=True, pin_memory=True)
 
     # Initialize network
     #model = Model_UNET(in_channels=ModelHyperparameters.in_channels, 
     #                   out_channels=ModelHyperparameters.out_channels).to(device=CurrentDevice, dtype=dtype)
 
     model = Model_Custom(in_channels=ModelHyperparameters.in_channels, 
-                       out_channels=ModelHyperparameters.out_channels).to(device=CurrentDevice, dtype=dtype)
+                         out_channels=ModelHyperparameters.out_channels).to(device=CurrentDevice, dtype=dtype)
 
     # Loss and optimizer
     criterion = nn.MSELoss()
@@ -66,11 +74,15 @@ def GetDefaultTrainingDict() -> TrainingDictType:
         'hyperparams':          hyperparams,
         'train_ds':             train_ds,
         'train_dataloader':     train_loader,
+        'valid_dataloader':     valid_loader,
         'model':                model,
         'criterion':            criterion,
         'optimizer':            optimizer,
         'device':               CurrentDevice,
         'dtype':                dtype,
+        'model_save_path':      GetTrainingsPath(stem=str(model)),
+        'model_load_path':      GetTrainingsPath(stem=str(model)),
+        'model_inference_path': GetInferencePath(stem=str(model))
     }
     
 
@@ -101,3 +113,5 @@ class TrainingConfig(dict):
     def __setitem__(self, key:str=None, value:Any=None):
         assert key is not None and value is not None, "key and value must be specified"
         super().__setitem__(key, value)
+
+BaselineTrainingCfg = TrainingConfig()
