@@ -126,7 +126,6 @@ def training_pipeline(TrainingConfigDict:TrainingDictType=None,
             data    = data.to(device=device, dtype=dtype)
             target  = target.to(device=device, dtype=dtype)
 
-
             #save_exr(str("E:/MASTERS/TEST/DATA/HDR/data_hdr_iter{}.exr".format(batch_idx * epoch + batch_idx)), data.squeeze(0).cpu().half())
             #save_exr(str("E:/MASTERS/TEST/TARGET/HDR/target_hdr_iter{}.exr".format(batch_idx * epoch + batch_idx)), target.squeeze(0).cpu().half())
 

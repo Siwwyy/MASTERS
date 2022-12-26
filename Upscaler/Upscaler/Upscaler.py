@@ -28,8 +28,7 @@ from Training_Pipeline          import training_pipeline
 # Training Time #
 #################
 config = TrainingConfig
-trained_model = training_pipeline(config, training=False, model_load=False)
-
+trained_model = training_pipeline(config, training=True, model_load=False)
 
 
 ##################
@@ -48,7 +47,6 @@ loaded_training_state_dict = load_model(config['model_save_path']/"model_float32
 trained_model.load_state_dict(loaded_training_state_dict['model_state_dict'])
 
 Inference_pipeline(config['model_inference_path'], trained_model, test_ds)
-
 
 
 if __name__ == "__main__":
