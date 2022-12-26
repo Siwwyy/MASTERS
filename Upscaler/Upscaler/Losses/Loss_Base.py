@@ -1,6 +1,6 @@
 import torch
 
-from abc            import ABCMeta, abstractmethod
+from abc import ABCMeta, abstractmethod
 
 # from Config.config import TensorType
 

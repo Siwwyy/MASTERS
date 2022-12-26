@@ -1,13 +1,13 @@
 import torch
-import torch.nn                             as nn
-import torch.nn.functional                  as F
-import torchvision.transforms.functional    as tvf
-import numpy                                as np
+import torch.nn as nn
+import torch.nn.functional as F
+import torchvision.transforms.functional as tvf
 
-from NeuralNetworks.NN_Base                 import Model_Base
-from Config.Config                          import TensorType, ShapeType
-from typing                                 import Optional, Tuple
+from NeuralNetworks.NN_Base import NN_Base
+from Config.Config import TensorType, ShapeType
+from typing import Optional, Tuple
 
+import numpy as np
 
 
 class DoubleConv(nn.Module):
@@ -110,7 +110,7 @@ class UpsampleBlock(nn.Module):
         return self.conv(x)
 
 
-class Model_UNET(Model_Base):
+class Model_UNET(NN_Base):
     """
     UNET architecture based model
 
@@ -196,6 +196,9 @@ class Model_UNET(Model_Base):
         # Final, last conv
         # TODO Add next conv, to reach upsampling. Right now: out shape == in shape. Should be -> 2x upsaling
         return self.final_conv(x)
+
+    def _generate_architecture(self) -> Optional[nn.Sequential]:
+        pass
 
 
 def test():
