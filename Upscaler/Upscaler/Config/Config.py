@@ -1,9 +1,9 @@
-
-from __future__     import annotations
-from typing         import Union, Annotated, Dict
-from pathlib        import Path
+from __future__ import annotations
 
 import torch
+
+from typing import Union, Annotated, Dict
+from pathlib import Path
 
 # TensorType = Annotated[torch.tensor, "Possible Tensor type"]
 # ShapeType = Annotated[Union[tuple, torch.Size], "Possible Shape types of the
@@ -60,9 +60,9 @@ from datetime import date
     Training ,inference ... results saving path
 """
 
-def GetResultsPath(directory:PathType=None, stem:PathType=date.today()) -> Path:
-    if directory is None: directory = Path("E:/MASTERS/Upscaler/Results")
-    return_path = Path(directory/"{}".format(stem)) 
+def GetResultsPath(result_date:date=None) -> Path:
+    if result_date is None: result_date = date.today()
+    return_path = Path("E:/MASTERS/Upscaler/Results/{}".format(result_date)) 
     if not return_path.exists():
         return_path.mkdir()
     return return_path
@@ -79,17 +79,10 @@ def GetTrainingsPath(directory:Path=ResultsPath, stem:PathType="baseline") -> Pa
 TrainingsPath = GetTrainingsPath()
 
 
-def GetInferencePath(directory:Path=ResultsPath, stem:PathType="baseline") -> Path:
-    return_path = Path(directory/"Inference"/stem)
+def GetInferenceResultsPath(directory:Path=ResultsPath, stem:PathType="baseline") -> Path:
+    return_path = Path(directory/"InferenceResults"/stem)
     if not return_path.exists():
         return_path.mkdir(parents=True)
     return return_path
 
-InferenceResultsPath = GetInferencePath()
-
-
-
-from Config.TrainingConfig      import TrainingDictType, GetBaselineConfig
-
-# Configs for Trainings etc.
-TrainingConfig:TrainingDictType = GetBaselineConfig()
+InferenceResultsPath = GetInferenceResultsPath()

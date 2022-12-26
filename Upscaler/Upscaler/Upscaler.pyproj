@@ -33,9 +33,6 @@
     <Compile Include="Config\Config_Utils.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Config\TrainingConfig.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Config\__init__.py">
       <SubType>Code</SubType>
     </Compile>

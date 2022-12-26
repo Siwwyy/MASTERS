@@ -1,7 +1,7 @@
 
-from typing             import Dict, Union
-from pathlib            import Path
-from Config.Config      import PathType, TensorType
+from typing import Dict, Union
+from pathlib import Path
+from Config.Config import PathType, TensorType
 
 import torch
 
