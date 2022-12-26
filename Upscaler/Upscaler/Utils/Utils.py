@@ -10,7 +10,6 @@ from torch                          import optim
 import torch
 
 
-
 state_dict_type = Dict[str, Union[str, dict, int, float, Model_Base, Dataset_Base]]
 
 '''

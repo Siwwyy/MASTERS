@@ -26,7 +26,6 @@ import numpy                        as np
 torch.backends.cudnn.benchmark = True
 torch.backends.cudnn.enabled = True
 
-
 def save_checkpoint(model_save_path:PathType=None,
                     model_name:str=None,
                     epoch:int=0,
