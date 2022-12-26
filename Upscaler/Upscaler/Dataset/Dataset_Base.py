@@ -4,10 +4,10 @@ import torchvision.transforms
 import pandas as pd
 
 
-from Config.Config import TensorType, PathType
-from torch.utils.data import Dataset
-from typing import Optional
-from abc import ABCMeta, abstractmethod
+from Config.Config          import TensorType, PathType
+from torch.utils.data       import Dataset
+from typing                 import Optional
+from abc                    import ABCMeta, abstractmethod
 
 
 # TODO -> Move it maybe to separate file, which will contain only
