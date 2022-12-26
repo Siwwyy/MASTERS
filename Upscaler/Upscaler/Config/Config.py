@@ -60,9 +60,9 @@ from datetime import date
     Training ,inference ... results saving path
 """
 
-def GetResultsPath(result_date:date=None) -> Path:
-    if result_date is None: result_date = date.today()
-    return_path = Path("E:/MASTERS/Upscaler/Results/{}".format(result_date)) 
+def GetResultsPath(directory:PathType=None, stem:PathType=date.today()) -> Path:
+    if directory is None: directory = Path("E:/MASTERS/Upscaler/Results")
+    return_path = Path(directory/"{}".format(stem)) 
     if not return_path.exists():
         return_path.mkdir()
     return return_path
@@ -86,3 +86,10 @@ def GetInferencePath(directory:Path=ResultsPath, stem:PathType="baseline") -> Pa
     return return_path
 
 InferenceResultsPath = GetInferencePath()
+
+
+
+from Config.TrainingConfig      import TrainingDictType, GetBaselineConfig
+
+# Configs for Trainings etc.
+TrainingConfig:TrainingDictType = GetBaselineConfig()

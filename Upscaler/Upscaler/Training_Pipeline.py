@@ -1,26 +1,28 @@
-from typing             import Dict, Union, Any
-from pathlib            import Path
-from dataclasses        import dataclass
-from tqdm               import tqdm  # For nice progress bar when training the data!
-from datetime           import date
+from typing                         import Dict, Union, Any
+from pathlib                        import Path
+from dataclasses                    import dataclass
+from tqdm                           import tqdm  # For nice progress bar when training the data!
+from datetime                       import date
 
 # Own imports
-from Config.Config                  import PathType, CurrentDevice, TrainingsPath
-from NeuralNetworks.NN_Base         import NN_Base
+from Config.Config                  import PathType, CurrentDevice, TrainingsPath, TrainingDictType
+from Config.TrainingConfig          import ModelHyperparameters
+from NeuralNetworks.NN_Base         import Model_Base
 from Dataset.Dataset_UE             import Dataset_UE, save_exr
 from Dataset.Dataset_Base           import Dataset_Base
 from Colorspace.PreProcessing       import preprocessing_pipeline, depreprocessing_pipeline
 from NeuralNetworks.UNet            import Model_UNET
 from NeuralNetworks.Model_Custom    import Model_Custom
 from Utils.Utils                    import save_model, load_model
-from Config.TrainingConfig          import ModelHyperparameters, TrainingDictType
 
 # Libs imports
-from torch              import optim       # For optimizers like SGD, Adam, etc.
-from torch.utils.data   import DataLoader
+from torch                          import optim       # For optimizers like SGD, Adam, etc.
+from torch.utils.data               import DataLoader
 import torch
-import torch.nn as nn
+import torch.nn                     as nn
+import numpy                        as np
 
+# Turn on cudnn backend and benchmark for better performance
 torch.backends.cudnn.benchmark = True
 torch.backends.cudnn.enabled = True
 
@@ -28,7 +30,7 @@ torch.backends.cudnn.enabled = True
 def save_checkpoint(model_save_path:PathType=None,
                     model_name:str=None,
                     epoch:int=0,
-                    model:NN_Base=None, 
+                    model:Model_Base=None, 
                     hyperparams:ModelHyperparameters=None,
                     optimizer:optim=None,
                     dataset_name:str="Dataset_UE"):
@@ -49,23 +51,36 @@ def save_checkpoint(model_save_path:PathType=None,
 
 # summarize history for loss
 import matplotlib.pyplot as plt
+from matplotlib.ticker import (MultipleLocator,
+                               FormatStrFormatter,
+                               AutoMinorLocator)
+
 def plot_loss_valid(train_loss:list=None, valid_loss:list=None, epochs:int=10):
+
+    epochs_list = range(0, epochs)
+    train_loss[:] = [2.0 if elem > 2.0 else elem for elem in train_loss]
+    valid_loss[:] = [2.0 if elem > 2.0 else elem for elem in valid_loss]
+    max_plot_value = max(train_loss) if max(train_loss) > max(valid_loss) else max(valid_loss)
+
+
     fig, ax = plt.subplots(figsize = (20,6))
-    plt.plot(range(1,epochs+1), train_loss, 'b', label='Training loss')
-    plt.plot(range(1,epochs+1), valid_loss, 'c', label='Validation loss')
-    plt.title('Training and validation accuracy')
+    plt.plot(epochs_list, train_loss, '-o', label='Training loss')
+    plt.plot(epochs_list, valid_loss, '-o', label='Validation loss')
+    plt.title('Training and validation loss')
     plt.ylabel('loss')
     plt.xlabel('epoch')
+    plt.xticks(range(0, epochs, 1))
+    plt.yticks(np.arange(0, max_plot_value + 0.1, 0.1))
+    plt.ylim(0.0, max_plot_value + 0.1)
     plt.legend(['train', 'valid'], loc='upper left')
     plt.show()
 
 
-
 def training_pipeline(TrainingConfigDict:TrainingDictType=None, 
-                          training:bool=True, 
-                          model_load:bool=False) -> NN_Base:
+                      training:bool=True, 
+                      model_load:bool=False) -> Model_Base:
     """
-
+        Training pipeline
     """
 
     # Hyperparams, dataset, dataloader, model etc.
@@ -83,7 +98,7 @@ def training_pipeline(TrainingConfigDict:TrainingDictType=None,
     if not training:
         return model
 
-    # Load checkpoint or not
+    # Load checkpoint or not4
     if model_load:
         loaded_training_state_dict = load_model(TrainingConfigDict['model_load_path'])
         model.load_state_dict(loaded_training_state_dict['model_state_dict'])
@@ -92,7 +107,7 @@ def training_pipeline(TrainingConfigDict:TrainingDictType=None,
     # Train Network
     avg_train_loss_per_epoch = []
     avg_valid_loss_per_epoch = []
-    min_valid_loss = 9999.9
+    min_valid_loss = 9999.9 #kind of "max" value of valid loss to find minimal valid loss of specified training
     for epoch in range(hyperparams.num_epochs):
 
         #Log pass
@@ -150,8 +165,10 @@ def training_pipeline(TrainingConfigDict:TrainingDictType=None,
                 # PreProcess the data
                 data    = preprocessing_pipeline(data)
                 target  = preprocessing_pipeline(target)
-                save_exr(str("E:/MASTERS/TEST/DATA/LDR/data_ldr_iter{}.exr".format(batch_idx * epoch + batch_idx)), data.squeeze(0).cpu().half())
-                save_exr(str("E:/MASTERS/TEST/TARGET/LDR/target_ldr_iter{}.exr".format(batch_idx * epoch + batch_idx)), target.squeeze(0).cpu().half())
+
+                #save_exr(str("E:/MASTERS/TEST/DATA/LDR/data_ldr_iter{}.exr".format(batch_idx * epoch + batch_idx)), data.squeeze(0).cpu().half())
+                #save_exr(str("E:/MASTERS/TEST/TARGET/LDR/target_ldr_iter{}.exr".format(batch_idx * epoch + batch_idx)), target.squeeze(0).cpu().half())
+
                 # forward
                 pred = model(data)
                 loss = criterion(pred, target)
@@ -173,7 +190,7 @@ def training_pipeline(TrainingConfigDict:TrainingDictType=None,
         if min_valid_loss > total_valid_loss:
             min_valid_loss = total_valid_loss
             save_checkpoint(TrainingConfigDict['model_save_path'],
-                            "model_float32_epoch{}".format(str(epoch)),
+                            "model_float32_best".format(str(epoch)),
                             epoch,
                             model,
                             hyperparams,

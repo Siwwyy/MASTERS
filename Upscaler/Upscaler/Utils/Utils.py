@@ -1,16 +1,17 @@
 
-from Config.Config import PathType
-from pathlib import Path
-from typing import Dict, Union, Optional, Any
-from NeuralNetworks.NN_Base import NN_Base
-from Dataset.Dataset_Base import Dataset_Base
-from torch import optim
+from Config.Config                  import PathType
+from pathlib                        import Path
+
+from typing                         import Dict, Union, Optional, Any
+from NeuralNetworks.NN_Base         import Model_Base
+from Dataset.Dataset_Base           import Dataset_Base
+from torch                          import optim
 
 import torch
 
 
 
-state_dict_type = Dict[str, Union[str, dict, int, float, NN_Base, Dataset_Base]]
+state_dict_type = Dict[str, Union[str, dict, int, float, Model_Base, Dataset_Base]]
 
 '''
     Current saving dict format

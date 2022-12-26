@@ -1,18 +1,16 @@
 import torch
-import torch.nn as nn
+import torch.nn                 as nn
 import torchvision.transforms
-import numpy as np
+import numpy                    as np
 
 # EXR Utils
 import OpenEXR
 import Imath
 
-# ------------- #
-
-from Config.Config import TensorType, PathType
-from Dataset.Dataset_Base import Dataset_Base
-from typing import Optional, Tuple, Union, List
-from pathlib import Path
+from Config.Config              import TensorType, PathType
+from Dataset.Dataset_Base       import Dataset_Base
+from typing                     import Optional, Tuple, Union, List
+from pathlib                    import Path
 
 
 
@@ -27,7 +25,9 @@ def load_exr_file(absolute_path:str, channels:Optional[List[str]]=None) -> Tenso
     channels: Optional[List[str]] (default is None)
         channels to read, e.g., channels=["R", "G", "B"], channels=["R"] etc.
 
-    ----------
+    Returns
+    -------
+        PyTorch Tensor in CHW format
     """
 
     # Check if file under given path is correct
@@ -74,7 +74,6 @@ def save_exr(absolute_path:str, tensor:TensorType=None, channels:Optional[List[s
         CHW shaped pytorch tensor
     channels: Optional[List[str]] (default is None)
         channels to read, e.g., channels=["R", "G", "B"], channels=["R"] etc.
-    ----------
     """
     assert tensor is not None, "Tensor can't be None!"
     assert tensor.dim() in [2,3], "Tensor dim must be equal 2 or 3!"
@@ -157,9 +156,9 @@ class Dataset_UE(Dataset_Base):
 
 
     def __len__(self) -> int:
-        #return len(self.csv_file)
+        return len(self.csv_file)
         #return 64
-        return 2
+        #return 2
 
     def __getitem__(self, idx: int = None) -> Tuple[TensorType, TensorType]:
         assert idx is not None, "Index value can't be None! Should be an integer"

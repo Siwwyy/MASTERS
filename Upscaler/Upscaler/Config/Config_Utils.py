@@ -1,5 +1,5 @@
-from Config import PathType, DictType
-from omegaconf import OmegaConf
+from Config         import PathType, DictType
+from omegaconf      import OmegaConf
 
 
 def read_cfg(yaml_path: PathType = None) -> DictType:
