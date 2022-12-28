@@ -94,11 +94,11 @@ class TrainingConfig(dict):
     def __init__(self, mapping=None, **kwargs):
         
         if mapping is None:
-            mapping = GetDefaultTrainingDict()
+            mapping = {}
            
         if kwargs:
             mapping.update({str(key): value for key, value in kwargs.items()})
-        assert self.check_required_keys(mapping), "Missing required key in TrainingConfig Dictonary! Look at check_required_keys method"
+        #assert self.check_required_keys(mapping), "Missing required key in TrainingConfig Dictonary! Look at check_required_keys method"
         super().__init__(mapping)
 
     def __getitem__(self, key):
@@ -131,19 +131,19 @@ def GetBaselineConfig():
     hyperparams.in_channels         = 3
     hyperparams.out_channels        = 3
     hyperparams.learning_rate       = 0.001
-    hyperparams.batch_size          = 1
-    hyperparams.num_epochs          = 15
+    hyperparams.batch_size          = 32
+    hyperparams.num_epochs          = 100
 
     # Create Dataset for training and validating
     train_ds = Dataset_UE(ds_root_path=Path("E:/MASTERS/UE4/SubwaySequencer_4_26/DumpedBuffers"),
                           csv_root_path=Path("E:/MASTERS/UE4/SubwaySequencer_4_26/DumpedBuffers/info_Native.csv"),
                           #crop width x height == 128x128 (for now)
-                          crop_coords=(900, 1028, 500, 628))
+                          crop_coords=(900, 1028, 500, 628), cached=True)
 
     valid_ds = Dataset_UE(ds_root_path=Path("E:/MASTERS/UE4/InfiltratorDemo_4_26_2/DumpedBuffers"),
                           csv_root_path=Path("E:/MASTERS/UE4/InfiltratorDemo_4_26_2/DumpedBuffers/info_Native.csv"),
                           #crop width x height == 128x128 (for now)
-                          crop_coords=(900, 1028, 500, 628))
+                          crop_coords=(900, 1028, 500, 628), cached=True)
 
     # Create dataloader for training and validating
     train_loader = DataLoader(dataset=train_ds, batch_size=hyperparams.batch_size, shuffle=True, drop_last=True, pin_memory=True)
@@ -167,7 +167,10 @@ def GetBaselineConfig():
     BaselineTrainingCfg['optimizer'] =              optimizer
     BaselineTrainingCfg['device'] =                 CurrentDevice
     BaselineTrainingCfg['dtype'] =                  dtype
-    BaselineTrainingCfg['model_save_path'] =        GetTrainingsPath(stem=str(model))
-    BaselineTrainingCfg['model_load_path'] =        GetTrainingsPath(stem=str(model))
-    BaselineTrainingCfg['model_inference_path'] =   GetInferencePath(stem=str(model))
+    #BaselineTrainingCfg['model_save_path'] =        GetTrainingsPath(stem=str(model))
+    #BaselineTrainingCfg['model_load_path'] =        GetTrainingsPath(stem=str(model))
+    #BaselineTrainingCfg['model_inference_path'] =   GetInferencePath(stem=str(model))
+    BaselineTrainingCfg['model_save_path'] =        GetTrainingsPath(stem=str(model)+"/epoch{}".format(hyperparams.num_epochs))
+    BaselineTrainingCfg['model_load_path'] =        GetTrainingsPath(stem=str(model)+"/epoch{}".format(hyperparams.num_epochs))
+    BaselineTrainingCfg['model_inference_path'] =   GetInferencePath(stem=str(model)+"/epoch{}".format(hyperparams.num_epochs))
     return BaselineTrainingCfg

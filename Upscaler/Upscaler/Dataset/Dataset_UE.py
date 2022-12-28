@@ -1,6 +1,6 @@
 import torch
-import torch.nn                 as nn
 import torchvision.transforms
+import torch.nn                 as nn
 import numpy                    as np
 
 # EXR Utils
@@ -11,6 +11,7 @@ from Config.Config              import TensorType, PathType
 from Dataset.Dataset_Base       import Dataset_Base
 from typing                     import Optional, Tuple, Union, List
 from pathlib                    import Path
+from tqdm                       import tqdm
 
 
 
@@ -124,6 +125,7 @@ class Dataset_UE(Dataset_Base):
         csv_root_path: Optional[PathType] = None,
         crop_coords: Optional[Tuple[int, int, int, int]] = None,
         transforms: Optional[torchvision.transforms.Compose] = None,
+        cached:bool=False
     ):
         assert (
             csv_root_path is not None
@@ -154,15 +156,44 @@ class Dataset_UE(Dataset_Base):
             self.crop_coords = (None, None, None, None)
             self.crop_coords_hr = (None, None, None, None)
 
+        # Caching tensors
+        self.cached = cached
+        if self.cached:
+            self.cache_lr = torch.empty((1000,3,128,128), dtype=torch.float16, device="cpu")
+            self.cache_hr = torch.empty((1000,3,256,256), dtype=torch.float16, device="cpu")
+
+            for idx in tqdm(range(len(self.csv_file))):
+
+            
+                file_idx, file_name = self.csv_file.iloc[idx]
+
+                abosolute_lr_path = self.lr_folder / file_name
+                abosolute_hr_path = self.hr_folder / file_name
+
+                # lr file
+                lr_tensor = load_exr_file(str(abosolute_lr_path), Dataset_UE.channels)[..., self.crop_coords[2]:self.crop_coords[3], self.crop_coords[0]:self.crop_coords[1]]
+
+                # hr file
+                hr_tensor = load_exr_file(str(abosolute_hr_path), Dataset_UE.channels)[..., self.crop_coords_hr[2]:self.crop_coords_hr[3], self.crop_coords_hr[0]:self.crop_coords_hr[1]]
+                
+                self.cache_lr[idx] = lr_tensor
+                self.cache_hr[idx] = hr_tensor
+
+            print("Cached LR and HR tensors!")
+            print()
+
 
     def __len__(self) -> int:
         return len(self.csv_file)
-        #return 64
+        #return 32*5
         #return 2
 
     def __getitem__(self, idx: int = None) -> Tuple[TensorType, TensorType]:
         assert idx is not None, "Index value can't be None! Should be an integer"
         assert idx < self.__len__(), "Index out of bound"
+
+        if self.cached:
+            return (self.cache_lr[idx], self.cache_hr[idx])
 
         ## Just to check, if tensor is not given as an indice
         ## if so, just return it back to scalar (int type)

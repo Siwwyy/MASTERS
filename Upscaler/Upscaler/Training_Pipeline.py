@@ -50,28 +50,27 @@ def save_checkpoint(model_save_path:PathType=None,
 
 # summarize history for loss
 import matplotlib.pyplot as plt
-from matplotlib.ticker import (MultipleLocator,
-                               FormatStrFormatter,
-                               AutoMinorLocator)
 
 def plot_loss_valid(train_loss:list=None, valid_loss:list=None, epochs:int=10):
-
+    assert train_loss is not None and valid_loss is not None
     epochs_list = range(0, epochs)
-    train_loss[:] = [2.0 if elem > 2.0 else elem for elem in train_loss]
-    valid_loss[:] = [2.0 if elem > 2.0 else elem for elem in valid_loss]
     max_plot_value = max(train_loss) if max(train_loss) > max(valid_loss) else max(valid_loss)
 
-
     fig, ax = plt.subplots(figsize = (20,6))
+    plt.title('Training and validation loss')
+    plt.ylim(0.0, max_plot_value + 0.1)
+
     plt.plot(epochs_list, train_loss, '-o', label='Training loss')
     plt.plot(epochs_list, valid_loss, '-o', label='Validation loss')
-    plt.title('Training and validation loss')
+
     plt.ylabel('loss')
     plt.xlabel('epoch')
+
     plt.xticks(range(0, epochs, 1))
-    plt.yticks(np.arange(0, max_plot_value + 0.1, 0.1))
-    plt.ylim(0.0, max_plot_value + 0.1)
-    plt.legend(['train', 'valid'], loc='upper left')
+    plt.yticks(np.linspace(0.0, max_plot_value + 0.1, num=10))
+
+    fig.tight_layout()
+    plt.legend(['train', 'valid'], loc='upper right')
     plt.show()
 
 
@@ -119,7 +118,7 @@ def training_pipeline(TrainingConfigDict:TrainingDictType=None,
         model.train() # prepare model for training
         for batch_idx, (data, target) in enumerate(tqdm(train_loader)):
 
-            #Zero gradients
+            # Zeroing gradients
             optimizer.zero_grad()
 
             # Get data to cuda if possible

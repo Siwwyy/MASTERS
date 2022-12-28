@@ -18,7 +18,7 @@ def Inference_pipeline(outputs_save_path:PathType=None, model:Model_Base=None, d
     model.eval()
     model.requires_grad_(False)
     model.to(device=device) #move model to specified device
-    frame_idx = 500
+    frame_idx = 20
     with torch.no_grad():
 
         #load test inputs
@@ -44,10 +44,10 @@ def Inference_pipeline(outputs_save_path:PathType=None, model:Model_Base=None, d
             outputs_save_path.mkdir(exist_ok=True)
 
         # save buffers
-        save_exr(str(outputs_save_path/"GT_hdr_frame{}.exr".format(frame_idx)), hr_clone.cpu().half())
-        save_exr(str(outputs_save_path/"GT_ldr_frame{}.exr".format(frame_idx)), hr.squeeze(0).cpu().half())
+        save_exr(str(outputs_save_path/"GT_hdr.exr"), hr_clone.cpu().half())
+        save_exr(str(outputs_save_path/"GT_ldr.exr"), hr.squeeze(0).cpu().half())
 
         print("Pred min: ", torch.min(pred_hr), "| Pred max: ",torch.max(pred_hr))
 
-        save_exr(str(outputs_save_path/"pred_ldr_frame{}.exr".format(frame_idx)), pred_hr.squeeze(0).cpu().half())
-        save_exr(str(outputs_save_path/"pred_hdr_frame{}.exr".format(frame_idx)), depreprocessing_pipeline(pred_hr).squeeze(0).cpu().half())
+        save_exr(str(outputs_save_path/"pred_ldr.exr"), pred_hr.squeeze(0).cpu().half())
+        save_exr(str(outputs_save_path/"pred_hdr.exr"), depreprocessing_pipeline(pred_hr).squeeze(0).cpu().half())
