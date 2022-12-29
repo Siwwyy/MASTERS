@@ -130,20 +130,22 @@ def GetBaselineConfig():
     hyperparams = ModelHyperparameters()
     hyperparams.in_channels         = 3
     hyperparams.out_channels        = 3
-    hyperparams.learning_rate       = 0.001
+    hyperparams.learning_rate       = 0.0001
     hyperparams.batch_size          = 32
-    hyperparams.num_epochs          = 100
+    hyperparams.num_epochs          = 600
 
     # Create Dataset for training and validating
     train_ds = Dataset_UE(ds_root_path=Path("E:/MASTERS/UE4/SubwaySequencer_4_26/DumpedBuffers"),
                           csv_root_path=Path("E:/MASTERS/UE4/SubwaySequencer_4_26/DumpedBuffers/info_Native.csv"),
                           #crop width x height == 128x128 (for now)
-                          crop_coords=(900, 1028, 500, 628), cached=True)
+                          crop_coords=(900, 1028, 500, 628), 
+                          cached=False)
 
     valid_ds = Dataset_UE(ds_root_path=Path("E:/MASTERS/UE4/InfiltratorDemo_4_26_2/DumpedBuffers"),
                           csv_root_path=Path("E:/MASTERS/UE4/InfiltratorDemo_4_26_2/DumpedBuffers/info_Native.csv"),
                           #crop width x height == 128x128 (for now)
-                          crop_coords=(900, 1028, 500, 628), cached=True)
+                          crop_coords=(900, 1028, 500, 628), 
+                          cached=False)
 
     # Create dataloader for training and validating
     train_loader = DataLoader(dataset=train_ds, batch_size=hyperparams.batch_size, shuffle=True, drop_last=True, pin_memory=True)

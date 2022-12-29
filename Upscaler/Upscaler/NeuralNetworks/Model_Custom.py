@@ -194,7 +194,6 @@ class Model_Custom(Model_Base):
         
         x = self.upsample_block5(x)
         # Final, last conv
-        # TODO Add next conv, to reach upsampling. Right now: out shape == in shape. Should be -> 2x upsaling
         return self.final_conv(x)
 
 

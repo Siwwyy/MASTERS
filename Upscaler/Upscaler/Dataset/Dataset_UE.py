@@ -186,7 +186,7 @@ class Dataset_UE(Dataset_Base):
     def __len__(self) -> int:
         return len(self.csv_file)
         #return 32*5
-        #return 2
+        #return 32
 
     def __getitem__(self, idx: int = None) -> Tuple[TensorType, TensorType]:
         assert idx is not None, "Index value can't be None! Should be an integer"

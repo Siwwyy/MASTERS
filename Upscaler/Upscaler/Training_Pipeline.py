@@ -60,13 +60,14 @@ def plot_loss_valid(train_loss:list=None, valid_loss:list=None, epochs:int=10):
     plt.title('Training and validation loss')
     plt.ylim(0.0, max_plot_value + 0.1)
 
-    plt.plot(epochs_list, train_loss, '-o', label='Training loss')
-    plt.plot(epochs_list, valid_loss, '-o', label='Validation loss')
+    plt.plot(epochs_list, train_loss, '-', label='Training loss')
+    plt.plot(epochs_list, valid_loss, '-', label='Validation loss')
 
     plt.ylabel('loss')
     plt.xlabel('epoch')
 
-    plt.xticks(range(0, epochs, 1))
+    #plt.xticks(range(0, epochs, int(epochs/10)))
+    #plt.xticks(range(0, epochs, 1))
     plt.yticks(np.linspace(0.0, max_plot_value + 0.1, num=10))
 
     fig.tight_layout()
@@ -178,8 +179,8 @@ def training_pipeline(TrainingConfigDict:TrainingDictType=None,
         # it will give a correct avg loss
         # if divided by batch_size, then sometimes it may be not correct,
         # because batch_size is sometimes not dividable by num of samples
-        total_train_loss = total_train_loss / len(train_loader)
-        total_valid_loss = total_valid_loss / len(valid_loader)
+        #total_train_loss = total_train_loss / len(train_loader)
+        #total_valid_loss = total_valid_loss / len(valid_loader)
         avg_train_loss_per_epoch.append(total_train_loss)
         avg_valid_loss_per_epoch.append(total_valid_loss)
 
