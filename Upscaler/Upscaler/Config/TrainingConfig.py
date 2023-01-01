@@ -1,19 +1,20 @@
 
-from NeuralNetworks.NN_Base             import Model_Base
-from NeuralNetworks.UNet                import Model_UNET
-from NeuralNetworks.Model_Custom        import Model_Custom
-from Dataset.Dataset_Base               import Dataset_Base
-from Dataset.Dataset_UE                 import Dataset_UE
-from Config.Config                      import CurrentDevice, GetTrainingsPath, GetInferencePath
+from NeuralNetworks.NN_Base                     import Model_Base
+from NeuralNetworks.UNet                        import Model_UNET
+from NeuralNetworks.Model_Custom                import Model_Custom
+from NeuralNetworks.Model_NoCheckerboard        import Model_NoCheckerboard
+from Dataset.Dataset_Base                       import Dataset_Base
+from Dataset.Dataset_UE                         import Dataset_UE, FullDataset_UE
+from Config.Config                              import CurrentDevice, GetTrainingsPath, GetInferencePath
 
-from dataclasses                        import dataclass,astuple
-from torch.utils.data                   import DataLoader
-from torch                              import optim
-from typing                             import Any, Dict
-from pathlib                            import Path
+from dataclasses                                import dataclass,astuple
+from torch.utils.data                           import DataLoader
+from torch                                      import optim
+from typing                                     import Any, Dict
+from pathlib                                    import Path
 
 import torch
-import torch.nn                         as nn
+import torch.nn                                 as nn
 
 
 
@@ -45,13 +46,13 @@ def GetDefaultTrainingDict() -> TrainingDictType:
     hyperparams = ModelHyperparameters()
 
     # Create Dataset for training and validating
-    train_ds = Dataset_UE(ds_root_path=Path("E:/MASTERS/UE4/SubwaySequencer_4_26/DumpedBuffers"),
-                          csv_root_path=Path("E:/MASTERS/UE4/SubwaySequencer_4_26/DumpedBuffers/info_Native.csv"),
+    train_ds = Dataset_UE(ds_root_path=Path("E:/MASTERS/UE4/DATASET/SubwaySequencer_4_26_2/DumpedBuffers"),
+                          csv_root_path=Path("E:/MASTERS/UE4/DATASET/SubwaySequencer_4_26_2/DumpedBuffers/info_Native.csv"),
                           #crop width x height == 128x128 (for now)
                           crop_coords=(900, 1028, 500, 628))
 
-    valid_ds = Dataset_UE(ds_root_path=Path("E:/MASTERS/UE4/InfiltratorDemo_4_26_2/DumpedBuffers"),
-                          csv_root_path=Path("E:/MASTERS/UE4/InfiltratorDemo_4_26_2/DumpedBuffers/info_Native.csv"),
+    valid_ds = Dataset_UE(ds_root_path=Path("E:/MASTERS/UE4/DATASET/InfiltratorDemo_4_26_2/DumpedBuffers"),
+                          csv_root_path=Path("E:/MASTERS/UE4/DATASET/InfiltratorDemo_4_26_2/DumpedBuffers/info_Native.csv"),
                           #crop width x height == 128x128 (for now)
                           crop_coords=(900, 1028, 500, 628))
 
@@ -135,14 +136,14 @@ def GetBaselineConfig():
     hyperparams.num_epochs          = 600
 
     # Create Dataset for training and validating
-    train_ds = Dataset_UE(ds_root_path=Path("E:/MASTERS/UE4/SubwaySequencer_4_26/DumpedBuffers"),
-                          csv_root_path=Path("E:/MASTERS/UE4/SubwaySequencer_4_26/DumpedBuffers/info_Native.csv"),
-                          #crop width x height == 128x128 (for now)
-                          crop_coords=(900, 1028, 500, 628), 
-                          cached=False)
+    train_ds = FullDataset_UE(ds_root_path=Path("E:/MASTERS/UE4/DATASET/"),
+                              ue_projects_list=["SubwaySequencer_4_26_2", "Rainforest_Scene_4_26_2"],
+                              #crop width x height == 128x128 (for now)
+                              crop_coords=(900, 1028, 500, 628), 
+                              cached=False)
 
-    valid_ds = Dataset_UE(ds_root_path=Path("E:/MASTERS/UE4/InfiltratorDemo_4_26_2/DumpedBuffers"),
-                          csv_root_path=Path("E:/MASTERS/UE4/InfiltratorDemo_4_26_2/DumpedBuffers/info_Native.csv"),
+    valid_ds = Dataset_UE(ds_root_path=Path("E:/MASTERS/UE4/DATASET/InfiltratorDemo_4_26_2/DumpedBuffers"),
+                          csv_root_path=Path("E:/MASTERS/UE4/DATASET/InfiltratorDemo_4_26_2/DumpedBuffers/info_Native.csv"),
                           #crop width x height == 128x128 (for now)
                           crop_coords=(900, 1028, 500, 628), 
                           cached=False)
@@ -151,9 +152,12 @@ def GetBaselineConfig():
     train_loader = DataLoader(dataset=train_ds, batch_size=hyperparams.batch_size, shuffle=True, drop_last=True, pin_memory=True)
     valid_loader = DataLoader(dataset=valid_ds, batch_size=hyperparams.batch_size, shuffle=True, drop_last=True, pin_memory=True)
 
+    ## Initialize network
+    #model = Model_Custom(in_channels=hyperparams.in_channels, 
+    #                     out_channels=hyperparams.out_channels).to(device=CurrentDevice, dtype=dtype)
     # Initialize network
-    model = Model_Custom(in_channels=hyperparams.in_channels, 
-                         out_channels=hyperparams.out_channels).to(device=CurrentDevice, dtype=dtype)
+    model = Model_NoCheckerboard(in_channels=hyperparams.in_channels, 
+                                 out_channels=hyperparams.out_channels).to(device=CurrentDevice, dtype=dtype)
 
     # Loss and optimizer
     criterion = nn.MSELoss()

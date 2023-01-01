@@ -6,15 +6,14 @@ import torchvision.transforms.functional    as tvf
 import numpy                                as np
 
 from NeuralNetworks.NN_Base                 import Model_Base
-from NeuralNetworks.PreDefined_Blocks       import DoubleConv, DownsampleBlock, UpsampleBlock
+from NeuralNetworks.PreDefined_Blocks       import DoubleConv, DownsampleBlock, UpscaleBlock
 from Config.Config                          import TensorType, ShapeType
 from typing                                 import Optional, Tuple
 
-
-class Model_Custom(Model_Base):
+class Model_NoCheckerboard(Model_Base):
     """
     UNET architecture based model
-    Model with smaller amount of features per layer (every divided by 8)
+    With Upscale layers without ConvTranspose2d
 
     Attributes
     ----------
@@ -31,7 +30,7 @@ class Model_Custom(Model_Base):
 
     def __init__(
         self,
-        name: str = "Model_Custom",
+        name: str = "Model_NoCheckerboard",
         input_shape: ShapeType = (1, 3, 1920, 1080),
         in_channels: int = 3,
         out_channels: int = 3,
@@ -58,17 +57,16 @@ class Model_Custom(Model_Base):
         # Bottleneck layer
         self.bottleneck = DoubleConv(conv_features[3], conv_features[3] * 2)
 
-        # Upsample layers
-        self.upsample_block1 = UpsampleBlock(conv_features[3] * 2, conv_features[3])
-        self.upsample_block2 = UpsampleBlock(conv_features[2] * 2, conv_features[2])
-        self.upsample_block3 = UpsampleBlock(conv_features[1] * 2, conv_features[1])
-        self.upsample_block4 = UpsampleBlock(conv_features[0] * 2, conv_features[0])
+        # Upsample layers | conv_features*2 -> because of skip_connection
+        self.upsample_block1 = UpscaleBlock(conv_features[3] * 2, conv_features[3])
+        self.upsample_block2 = UpscaleBlock(conv_features[2] * 2, conv_features[2])
+        self.upsample_block3 = UpscaleBlock(conv_features[1] * 2, conv_features[1])
+        self.upsample_block4 = UpscaleBlock(conv_features[0] * 2, conv_features[0])
 
         # Last upsample conv
-        #self.upsample_block5 = UpsampleBlock(conv_features[0], conv_features[0] // 2)
-        self.upsample_block5 = nn.ConvTranspose2d(
-            conv_features[0], conv_features[0] // 2, kernel_size=2, stride=2
-        )
+        self.upsample_block5 = nn.Sequential(nn.Upsample(scale_factor=2, mode='nearest'),
+                                             nn.Conv2d(conv_features[0], conv_features[0] // 2, kernel_size=1)) #1x1 conv, to accomplish what ConvTranspose2d does, kind of kernel_size
+        #self.upsample_block5 = UpscaleBlock(conv_features[0], conv_features[0] // 2)
 
         # Final convolution
         self.final_conv = nn.Conv2d(
@@ -104,3 +102,4 @@ def test():
     model = Model_UNET(in_channels=3, out_channels=3)
     preds = model(x)
     assert preds.shape == x.shape
+

@@ -179,8 +179,8 @@ def training_pipeline(TrainingConfigDict:TrainingDictType=None,
         # it will give a correct avg loss
         # if divided by batch_size, then sometimes it may be not correct,
         # because batch_size is sometimes not dividable by num of samples
-        #total_train_loss = total_train_loss / len(train_loader)
-        #total_valid_loss = total_valid_loss / len(valid_loader)
+        total_train_loss = total_train_loss / len(train_loader)
+        total_valid_loss = total_valid_loss / len(valid_loader)
         avg_train_loss_per_epoch.append(total_train_loss)
         avg_valid_loss_per_epoch.append(total_valid_loss)
 
