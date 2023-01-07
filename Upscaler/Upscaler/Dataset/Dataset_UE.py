@@ -265,8 +265,6 @@ class FullDataset_UE(Dataset_Base): #maybe derive from nn.Dataset instead of Dat
 
     def __len__(self) -> int:
         return self.dataset_size
-        #return 32*5
-        #return 32
 
     def __getitem__(self, idx: int = None) -> Tuple[TensorType, TensorType]:
         assert idx is not None and idx < self.__len__(), "Index value can't be None! Should be an integer or Index is out of bound"
