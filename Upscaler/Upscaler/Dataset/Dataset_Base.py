@@ -79,6 +79,7 @@ class Dataset_Base(torch.utils.data.Dataset, metaclass=ABCMeta):
             self.csv_file = pd.read_csv(
                 csv_root_path, names=("Frame Idx", "Frame name"), index_col=False
             )
+            self.dataset_size = len(self.csv_file)
             # self.csv_file = pd.read_csv(csv_root_path, index_col=False)
 
         # if tranforms has been not specified, then use Identity transform

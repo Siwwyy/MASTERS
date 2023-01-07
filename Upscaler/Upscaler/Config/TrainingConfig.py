@@ -1,19 +1,20 @@
 
-from NeuralNetworks.NN_Base             import Model_Base
-from NeuralNetworks.UNet                import Model_UNET
-from NeuralNetworks.Model_Custom        import Model_Custom
-from Dataset.Dataset_Base               import Dataset_Base
-from Dataset.Dataset_UE                 import Dataset_UE
-from Config.Config                      import CurrentDevice, GetTrainingsPath, GetInferencePath
+from NeuralNetworks.NN_Base                     import Model_Base
+from NeuralNetworks.UNet                        import Model_UNET
+from NeuralNetworks.Model_Custom                import Model_Custom
+from NeuralNetworks.Model_NoCheckerboard        import Model_NoCheckerboard
+from Dataset.Dataset_Base                       import Dataset_Base
+from Dataset.Dataset_UE                         import Dataset_UE, FullDataset_UE
+from Config.Config                              import CurrentDevice, GetTrainingsPath, GetInferencePath
 
-from dataclasses                        import dataclass,astuple
-from torch.utils.data                   import DataLoader
-from torch                              import optim
-from typing                             import Any, Dict
-from pathlib                            import Path
+from dataclasses                                import dataclass,astuple
+from torch.utils.data                           import DataLoader
+from torch                                      import optim
+from typing                                     import Any, Dict
+from pathlib                                    import Path
 
 import torch
-import torch.nn                         as nn
+import torch.nn                                 as nn
 
 
 
@@ -45,13 +46,13 @@ def GetDefaultTrainingDict() -> TrainingDictType:
     hyperparams = ModelHyperparameters()
 
     # Create Dataset for training and validating
-    train_ds = Dataset_UE(ds_root_path=Path("E:/MASTERS/UE4/SubwaySequencer_4_26/DumpedBuffers"),
-                          csv_root_path=Path("E:/MASTERS/UE4/SubwaySequencer_4_26/DumpedBuffers/info_Native.csv"),
+    train_ds = Dataset_UE(ds_root_path=Path("E:/MASTERS/UE4/DATASET/SubwaySequencer_4_26_2/DumpedBuffers"),
+                          csv_root_path=Path("E:/MASTERS/UE4/DATASET/SubwaySequencer_4_26_2/DumpedBuffers/info_Native.csv"),
                           #crop width x height == 128x128 (for now)
                           crop_coords=(900, 1028, 500, 628))
 
-    valid_ds = Dataset_UE(ds_root_path=Path("E:/MASTERS/UE4/InfiltratorDemo_4_26_2/DumpedBuffers"),
-                          csv_root_path=Path("E:/MASTERS/UE4/InfiltratorDemo_4_26_2/DumpedBuffers/info_Native.csv"),
+    valid_ds = Dataset_UE(ds_root_path=Path("E:/MASTERS/UE4/DATASET/InfiltratorDemo_4_26_2/DumpedBuffers"),
+                          csv_root_path=Path("E:/MASTERS/UE4/DATASET/InfiltratorDemo_4_26_2/DumpedBuffers/info_Native.csv"),
                           #crop width x height == 128x128 (for now)
                           crop_coords=(900, 1028, 500, 628))
 
@@ -94,11 +95,11 @@ class TrainingConfig(dict):
     def __init__(self, mapping=None, **kwargs):
         
         if mapping is None:
-            mapping = GetDefaultTrainingDict()
+            mapping = {}
            
         if kwargs:
             mapping.update({str(key): value for key, value in kwargs.items()})
-        assert self.check_required_keys(mapping), "Missing required key in TrainingConfig Dictonary! Look at check_required_keys method"
+        #assert self.check_required_keys(mapping), "Missing required key in TrainingConfig Dictonary! Look at check_required_keys method"
         super().__init__(mapping)
 
     def __getitem__(self, key):
@@ -130,28 +131,33 @@ def GetBaselineConfig():
     hyperparams = ModelHyperparameters()
     hyperparams.in_channels         = 3
     hyperparams.out_channels        = 3
-    hyperparams.learning_rate       = 0.001
-    hyperparams.batch_size          = 1
-    hyperparams.num_epochs          = 15
+    hyperparams.learning_rate       = 0.0001
+    hyperparams.batch_size          = 32
+    hyperparams.num_epochs          = 600
 
     # Create Dataset for training and validating
-    train_ds = Dataset_UE(ds_root_path=Path("E:/MASTERS/UE4/SubwaySequencer_4_26/DumpedBuffers"),
-                          csv_root_path=Path("E:/MASTERS/UE4/SubwaySequencer_4_26/DumpedBuffers/info_Native.csv"),
-                          #crop width x height == 128x128 (for now)
-                          crop_coords=(900, 1028, 500, 628))
+    train_ds = FullDataset_UE(ds_root_path=Path("E:/MASTERS/UE4/DATASET/"),
+                              ue_projects_list=["SubwaySequencer_4_26_2", "Rainforest_Scene_4_26_2"],
+                              #crop width x height == 128x128 (for now)
+                              crop_coords=(900, 1028, 500, 628), 
+                              cached=False)
 
-    valid_ds = Dataset_UE(ds_root_path=Path("E:/MASTERS/UE4/InfiltratorDemo_4_26_2/DumpedBuffers"),
-                          csv_root_path=Path("E:/MASTERS/UE4/InfiltratorDemo_4_26_2/DumpedBuffers/info_Native.csv"),
+    valid_ds = Dataset_UE(ds_root_path=Path("E:/MASTERS/UE4/DATASET/InfiltratorDemo_4_26_2/DumpedBuffers"),
+                          csv_root_path=Path("E:/MASTERS/UE4/DATASET/InfiltratorDemo_4_26_2/DumpedBuffers/info_Native.csv"),
                           #crop width x height == 128x128 (for now)
-                          crop_coords=(900, 1028, 500, 628))
+                          crop_coords=(900, 1028, 500, 628), 
+                          cached=False)
 
     # Create dataloader for training and validating
     train_loader = DataLoader(dataset=train_ds, batch_size=hyperparams.batch_size, shuffle=True, drop_last=True, pin_memory=True)
     valid_loader = DataLoader(dataset=valid_ds, batch_size=hyperparams.batch_size, shuffle=True, drop_last=True, pin_memory=True)
 
+    ## Initialize network
+    #model = Model_Custom(in_channels=hyperparams.in_channels, 
+    #                     out_channels=hyperparams.out_channels).to(device=CurrentDevice, dtype=dtype)
     # Initialize network
-    model = Model_Custom(in_channels=hyperparams.in_channels, 
-                         out_channels=hyperparams.out_channels).to(device=CurrentDevice, dtype=dtype)
+    model = Model_NoCheckerboard(in_channels=hyperparams.in_channels, 
+                                 out_channels=hyperparams.out_channels).to(device=CurrentDevice, dtype=dtype)
 
     # Loss and optimizer
     criterion = nn.MSELoss()
@@ -167,7 +173,10 @@ def GetBaselineConfig():
     BaselineTrainingCfg['optimizer'] =              optimizer
     BaselineTrainingCfg['device'] =                 CurrentDevice
     BaselineTrainingCfg['dtype'] =                  dtype
-    BaselineTrainingCfg['model_save_path'] =        GetTrainingsPath(stem=str(model))
-    BaselineTrainingCfg['model_load_path'] =        GetTrainingsPath(stem=str(model))
-    BaselineTrainingCfg['model_inference_path'] =   GetInferencePath(stem=str(model))
+    #BaselineTrainingCfg['model_save_path'] =        GetTrainingsPath(stem=str(model))
+    #BaselineTrainingCfg['model_load_path'] =        GetTrainingsPath(stem=str(model))
+    #BaselineTrainingCfg['model_inference_path'] =   GetInferencePath(stem=str(model))
+    BaselineTrainingCfg['model_save_path'] =        GetTrainingsPath(stem=str(model)+"/epoch{}".format(hyperparams.num_epochs))
+    BaselineTrainingCfg['model_load_path'] =        GetTrainingsPath(stem=str(model)+"/epoch{}".format(hyperparams.num_epochs))
+    BaselineTrainingCfg['model_inference_path'] =   GetInferencePath(stem=str(model)+"/epoch{}".format(hyperparams.num_epochs))
     return BaselineTrainingCfg

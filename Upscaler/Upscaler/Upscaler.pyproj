@@ -64,7 +64,13 @@
     <Compile Include="NeuralNetworks\Model_Custom.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="NeuralNetworks\Model_NoCheckerboard.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="NeuralNetworks\NN_Base.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="NeuralNetworks\PreDefined_Blocks.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="NeuralNetworks\UNet.py">

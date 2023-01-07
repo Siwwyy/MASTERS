@@ -37,7 +37,7 @@ def preprocessing_pipeline(hdr_tens:TensorType, exposure:Union[TensorType, float
 # Depreprocessing of inputs, Gamma -> Detonemap -> Exposure multiplication
 def depreprocessing_pipeline(ldr_tens:TensorType, exposure:Union[TensorType, float]=Exposure_Coefficient) -> TensorType:
     # gamma correction -> detonemap -> Exposure
-    ldr_tens[:] = gamma_correction(ldr_tens)
+    ldr_tens[:] = gamma_correction(ldr_tens.clip(min=1e-4, max=0.999994))
     ldr_tens[:] = detonemap_reinhard(ldr_tens)
     ldr_tens *= exposure
     return ldr_tens

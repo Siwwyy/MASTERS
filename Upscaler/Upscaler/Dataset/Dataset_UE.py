@@ -1,6 +1,6 @@
 import torch
-import torch.nn                 as nn
 import torchvision.transforms
+import torch.nn                 as nn
 import numpy                    as np
 
 # EXR Utils
@@ -11,6 +11,7 @@ from Config.Config              import TensorType, PathType
 from Dataset.Dataset_Base       import Dataset_Base
 from typing                     import Optional, Tuple, Union, List
 from pathlib                    import Path
+from tqdm                       import tqdm
 
 
 
@@ -85,13 +86,16 @@ def save_exr(absolute_path:str, tensor:TensorType=None, channels:Optional[List[s
     output_exr_header = OpenEXR.Header(tensor.size(-1), tensor.size(-2))
     channel_dtype = Imath.Channel(Imath.PixelType(OpenEXR.HALF)) if tensor.dtype is torch.float16 else Imath.Channel(Imath.PixelType(OpenEXR.FLOAT))
     output_exr_header['channels'] = dict([(channel, channel_dtype) for channel in channels])
-
+    output_exr_header['compression'] = Imath.Compression(Imath.Compression.NO_COMPRESSION) #for now, lets use no compression
     output_file = OpenEXR.OutputFile(absolute_path, output_exr_header)
 
     # tensor detach(if tensor is in Autograd graph) and convert to numpy array, then to bytes
     output_file_data = dict([(channel, data.detach().numpy().tobytes()) for channel, data in zip(channels, tensor)])
     output_file.writePixels(output_file_data)
     output_file.close()
+        
+
+
 
 class Dataset_UE(Dataset_Base):
     """
@@ -109,13 +113,15 @@ class Dataset_UE(Dataset_Base):
         x_min, x_max, y_min, y_max of the crop
     transforms: Optional[torchvision.transforms.Compose]
         optional composed torchvision's tranforms
+    cached: bool
+        if True, then it loads all of data to RAM at init time
     ----------
     """
 
     # Folder/subfolder structure must match Unreal's engine outputs!!
-    folder_structure = {"lr": Path("1920x1080-native"), "hr": Path("3840x2160-TAA")}
-    subfolders_structure = {"lr": Path("SceneColor"), "hr": Path("TemporalAA")}
-    channels = ["R", "G", "B"]  # for now, support only RGB, maybe alpha in future
+    folder_structure =          {"lr": Path("1920x1080-native"), "hr": Path("3840x2160-TAA")}
+    subfolders_structure =      {"lr": Path("SceneColor"),       "hr": Path("TemporalAA")}
+    channels =                  ["R", "G", "B"]  # for now, support only RGB, maybe alpha in future
 
     def __init__(
         self,
@@ -124,10 +130,12 @@ class Dataset_UE(Dataset_Base):
         csv_root_path: Optional[PathType] = None,
         crop_coords: Optional[Tuple[int, int, int, int]] = None,
         transforms: Optional[torchvision.transforms.Compose] = None,
+        cached:bool=False
     ):
         assert (
             csv_root_path is not None
         ), "Unreal Engine based dataset must contain csv file!"
+        assert Path(ds_root_path).exists(), "Film under {} path does not exist!".format(ds_root_path)
         super().__init__(name, ds_root_path, csv_root_path, transforms)
 
         self.lr_folder = (
@@ -141,7 +149,6 @@ class Dataset_UE(Dataset_Base):
             / Dataset_UE.subfolders_structure["hr"]
         )
 
-
         self.crop_coords = crop_coords
         self.crop_coords_hr = None
         if self.crop_coords is not None:
@@ -154,15 +161,43 @@ class Dataset_UE(Dataset_Base):
             self.crop_coords = (None, None, None, None)
             self.crop_coords_hr = (None, None, None, None)
 
+        # Caching tensors
+        self.cached = cached
+        if self.cached:
+            self.cache_lr = torch.empty((self.dataset_size,3,128,128), dtype=torch.float16, device="cpu")
+            self.cache_hr = torch.empty((self.dataset_size,3,256,256), dtype=torch.float16, device="cpu")
+
+            for idx in tqdm(range(self.dataset_size)):
+            
+                file_idx, file_name = self.csv_file.iloc[idx]
+
+                abosolute_lr_path = self.lr_folder / file_name
+                abosolute_hr_path = self.hr_folder / file_name
+
+                # lr file
+                lr_tensor = load_exr_file(str(abosolute_lr_path), Dataset_UE.channels)[..., self.crop_coords[2]:self.crop_coords[3], self.crop_coords[0]:self.crop_coords[1]]
+
+                # hr file
+                hr_tensor = load_exr_file(str(abosolute_hr_path), Dataset_UE.channels)[..., self.crop_coords_hr[2]:self.crop_coords_hr[3], self.crop_coords_hr[0]:self.crop_coords_hr[1]]
+                
+                self.cache_lr[idx] = lr_tensor
+                self.cache_hr[idx] = hr_tensor
+
+            print("\n Cached LR and HR tensors for {}".format(ds_root_path))
+            print()
+
 
     def __len__(self) -> int:
-        return len(self.csv_file)
-        #return 64
-        #return 2
+        return self.dataset_size
+        #return 32*5
+        #return 32
 
     def __getitem__(self, idx: int = None) -> Tuple[TensorType, TensorType]:
         assert idx is not None, "Index value can't be None! Should be an integer"
         assert idx < self.__len__(), "Index out of bound"
+
+        if self.cached:
+            return (self.cache_lr[idx], self.cache_hr[idx])
 
         ## Just to check, if tensor is not given as an indice
         ## if so, just return it back to scalar (int type)
@@ -182,6 +217,72 @@ class Dataset_UE(Dataset_Base):
 
         # TODO, add pytorch transforms if needed
         return (lr_tensor, hr_tensor)  # maybe, return dict?
+
+
+class FullDataset_UE(Dataset_Base): #maybe derive from nn.Dataset instead of Dataset_Base, because that class works as "wrapper" for many films
+    """
+    Dataset for data from Unreal Engine
+
+    Attributes
+    ----------
+    name : str
+        Name of dataset
+    ds_root_path : PathType  (str of Path)
+        path to root folder of dataset
+    ue_projects_list : List[str]
+        list of Unreal's projects e.g., [ 'Project1', 'Project2', ... ]
+     crop_coords: Optional[Tuple[int, int, int, int]]
+        x_min, x_max, y_min, y_max of the crop
+    transforms: Optional[torchvision.transforms.Compose]
+        optional composed torchvision's tranforms
+    cached: bool
+        if True, then it loads all of data to RAM at init time
+    ----------
+    """
+
+    def __init__(
+        self,
+        name: str = "FullDataset_UE",
+        ds_root_path: PathType = None,
+        ue_projects_list: List[str] = None,
+        crop_coords: Optional[Tuple[int, int, int, int]] = None,
+        transforms: Optional[torchvision.transforms.Compose] = None,
+        cached:bool=False
+    ):
+        assert ue_projects_list is not None, "ue_project_list must contain at least one UE film!"
+        super().__init__(name, ds_root_path, None, transforms)
+
+
+        self.dataset_list = []
+        self.dataset_size = 0
+        for ue_project in ue_projects_list:
+            tempDataset = Dataset_UE(ds_root_path=Path(ds_root_path/ue_project/"DumpedBuffers/"),
+                                     csv_root_path=Path(ds_root_path/ue_project/"DumpedBuffers/info_Native.csv"),
+                                     crop_coords=crop_coords, 
+                                     cached=cached)
+            self.dataset_list.append(tempDataset)
+            self.dataset_size += len(tempDataset) # accumulate dataset length, due to multiple ue projects
+
+    def __len__(self) -> int:
+        return self.dataset_size
+
+    def __getitem__(self, idx: int = None) -> Tuple[TensorType, TensorType]:
+        assert idx is not None and idx < self.__len__(), "Index value can't be None! Should be an integer or Index is out of bound"
+
+        for ue_project in self.dataset_list:
+            ue_project_len = len(ue_project)
+            if idx < ue_project_len:
+                return ue_project[idx]
+
+            idx = idx - ue_project_len
+
+        return ue_project[0]
+
+
+
+
+
+
 
 
 def test_ds_ue():
