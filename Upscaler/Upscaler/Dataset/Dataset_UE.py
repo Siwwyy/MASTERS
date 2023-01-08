@@ -130,7 +130,7 @@ class Dataset_UE(Dataset_Base):
         csv_root_path: Optional[PathType] = None,
         crop_coords: Optional[Tuple[int, int, int, int]] = None,
         transforms: Optional[torchvision.transforms.Compose] = None,
-        cached:bool=False
+        cached:bool=True
     ):
         assert (
             csv_root_path is not None
@@ -258,7 +258,8 @@ class FullDataset_UE(Dataset_Base): #maybe derive from nn.Dataset instead of Dat
         for ue_project in ue_projects_list:
             tempDataset = Dataset_UE(ds_root_path=Path(ds_root_path/ue_project/"DumpedBuffers/"),
                                      csv_root_path=Path(ds_root_path/ue_project/"DumpedBuffers/info_Native.csv"),
-                                     crop_coords=crop_coords, 
+                                     crop_coords=crop_coords,
+                                     transforms=transforms,
                                      cached=cached)
             self.dataset_list.append(tempDataset)
             self.dataset_size += len(tempDataset) # accumulate dataset length, due to multiple ue projects

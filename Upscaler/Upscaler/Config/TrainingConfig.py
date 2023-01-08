@@ -163,6 +163,9 @@ def GetBaselineConfig():
     criterion = nn.MSELoss()
     optimizer = optim.AdamW(model.parameters(), lr=hyperparams.learning_rate)
 
+
+    
+
     BaselineTrainingCfg = TrainingConfig()
     BaselineTrainingCfg['hyperparams'] =            hyperparams
     BaselineTrainingCfg['train_ds'] =               train_ds
