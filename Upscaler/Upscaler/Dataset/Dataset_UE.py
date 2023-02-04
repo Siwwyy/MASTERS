@@ -130,7 +130,7 @@ class Dataset_UE(Dataset_Base):
         csv_root_path: Optional[PathType] = None,
         crop_coords: Optional[Tuple[int, int, int, int]] = None,
         transforms: Optional[torchvision.transforms.Compose] = None,
-        cached:bool=True
+        cached:bool=False
     ):
         assert (
             csv_root_path is not None

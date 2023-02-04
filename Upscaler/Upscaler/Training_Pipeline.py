@@ -1,26 +1,23 @@
-from typing                         import Dict, Union, Any
-from pathlib                        import Path
-from dataclasses                    import dataclass
-from tqdm                           import tqdm  # For nice progress bar when training the data!
-from datetime                       import date
+from typing                                     import Dict, Union, Any
+from pathlib                                    import Path
+from tqdm                                       import tqdm  # For nice progress bar when training the data!
+from datetime                                   import date
 
 # Own imports
-from Config.Config                  import PathType, CurrentDevice, TrainingsPath, TrainingDictType
-from Config.TrainingConfig          import ModelHyperparameters
-from NeuralNetworks.NN_Base         import Model_Base
-from Dataset.Dataset_UE             import Dataset_UE, save_exr
-from Dataset.Dataset_Base           import Dataset_Base
-from Colorspace.PreProcessing       import preprocessing_pipeline, depreprocessing_pipeline
-from NeuralNetworks.UNet            import Model_UNET
-from NeuralNetworks.Model_Custom    import Model_Custom
-from Utils.Utils                    import save_model, load_model
+from Config.Config                              import PathType, CurrentDevice
+from Config.DefaultConfigs                      import ConfigMapping
+from Config.TrainingConfig                      import ModelHyperparameters
+from NeuralNetworks.NN_Base                     import Model_Base
+from Dataset.Dataset_UE                         import save_exr, Dataset_UE, FullDataset_UE
+from Colorspace.PreProcessing                   import preprocessing_pipeline, depreprocessing_pipeline
+from Utils.Utils                                import save_model, load_model
 
 # Libs imports
-from torch                          import optim       # For optimizers like SGD, Adam, etc.
-from torch.utils.data               import DataLoader
+from torch                                      import optim       # For optimizers like SGD, Adam, etc.
+from torch.utils.data                           import DataLoader
 import torch
-import torch.nn                     as nn
-import numpy                        as np
+import torch.nn                                 as nn
+import numpy                                    as np
 
 # Turn on cudnn backend and benchmark for better performance
 torch.backends.cudnn.benchmark = True
@@ -75,23 +72,26 @@ def plot_loss_valid(train_loss:list=None, valid_loss:list=None, epochs:int=10):
     plt.show()
 
 
-def training_pipeline(TrainingConfigDict:TrainingDictType=None, 
+def training_pipeline(config:ConfigMapping=None, 
                       training:bool=True, 
                       model_load:bool=False) -> Model_Base:
     """
         Training pipeline
     """
-
-    # Hyperparams, dataset, dataloader, model etc.
-    hyperparams =   TrainingConfigDict['hyperparams']
-    train_ds =      TrainingConfigDict['train_ds']
-    train_loader =  TrainingConfigDict['train_dataloader']
-    valid_loader =  TrainingConfigDict['valid_dataloader']
-    model =         TrainingConfigDict['model']
-    criterion =     TrainingConfigDict['criterion']
-    optimizer =     TrainingConfigDict['optimizer']
-    device =        TrainingConfigDict['device']
-    dtype =         TrainingConfigDict['dtype']
+    # Init of Hyperparams, dataset, dataloader, model etc.
+    hyperparams     = config['hyperparameters']['className'](**config['hyperparameters']['args'])
+    train_ds        = config['trainDS']['className'](**config['trainDS']['args'])
+    valid_ds        = config['validDS']['className'](**config['validDS']['args'])
+    config['trainDL']['args']['dataset'] = train_ds
+    config['validDL']['args']['dataset'] = valid_ds
+    train_loader    = config['trainDL']['className'](**config['trainDL']['args'])
+    valid_loader    = config['validDL']['className'](**config['validDL']['args'])
+    model           = config['model']['className'](**config['model']['args'])
+    criterion       = config['criterion']['className'](**config['criterion']['args'])
+    config['optimizer']['args']['params'] = model.parameters()
+    optimizer       = config['optimizer']['className'](**config['optimizer']['args'])
+    device          = config['device']
+    dtype           = config['dtype']
 
     # If training is False, then just return model | TODO, rethink that
     if not training:

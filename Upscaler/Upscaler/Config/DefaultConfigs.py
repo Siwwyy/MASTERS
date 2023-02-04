@@ -5,16 +5,13 @@ from NeuralNetworks.Model_NoCheckerboard        import Model_NoCheckerboard
 from Dataset.Dataset_Base                       import Dataset_Base
 from Dataset.Dataset_UE                         import Dataset_UE, FullDataset_UE
 from Config.Config                              import CurrentDevice, GetTrainingsPath, GetInferencePath
-from Config.TrainingConfig                      import TrainingConfig, ModelHyperparameters
+from Config.TrainingConfig                      import ModelHyperparameters
 
-
-from dataclasses                                import dataclass,astuple
 from torch.utils.data                           import DataLoader
 from torch                                      import optim
-from typing                                     import Any, Dict
+from typing                                     import Any, Dict, Union, Optional
 from pathlib                                    import Path
 from functools                                  import partial
-
 
 import torch
 import torch.nn                                 as nn
@@ -24,7 +21,17 @@ import inspect
 
 
 
-#Default Configs for objects, pipelines etc. used in project
+
+#Core dict contains paths to folders, dtype used in model, device etc.
+CoreDict = {
+    'device':                   CurrentDevice,
+    'dtype':                    torch.float32,
+    'model_save_path':          GetTrainingsPath(stem="Model_NoCheckerboard"), #maybe use partial here
+    'model_load_path':          GetTrainingsPath(stem="Model_NoCheckerboard"),
+    'model_inference_path':     GetInferencePath(stem="Model_NoCheckerboard"),
+}
+
+#Default Configs for objects, pipelines etc.  used in project
 HyperparametersDict = {
     'className':                ModelHyperparameters,
     'args': {
@@ -40,7 +47,7 @@ TrainDatasetDict = {
     'className':                FullDataset_UE,
     'args': {
         'name':                 'FullDataset_UE',
-        'ds_root_path':         Path("E:/MASTERS/UE4/DATASET/"),
+        'ds_root_path':         Path("F:/MASTERS/UE4/DATASET/"),
         'ue_projects_list':     ["SubwaySequencer_4_26_2", "Rainforest_Scene_4_26_2"],
         'crop_coords':          (900, 1028, 500, 628),
         'transforms':           None,
@@ -52,8 +59,8 @@ ValidDatasetDict = {
     'className':                Dataset_UE,
     'args': {
         'name':                 'Dataset_UE',
-        'ds_root_path':         Path("E:/MASTERS/UE4/DATASET/InfiltratorDemo_4_26_2/DumpedBuffers"),
-        'csv_root_path':        Path("E:/MASTERS/UE4/DATASET/InfiltratorDemo_4_26_2/DumpedBuffers/info_Native.csv"),
+        'ds_root_path':         Path("F:/MASTERS/UE4/DATASET/InfiltratorDemo_4_26_2/DumpedBuffers"),
+        'csv_root_path':        Path("F:/MASTERS/UE4/DATASET/InfiltratorDemo_4_26_2/DumpedBuffers/info_Native.csv"),
         'crop_coords':          (900, 1028, 500, 628),
         'transforms':           None,
         'cached':               False
@@ -63,7 +70,7 @@ ValidDatasetDict = {
 TrainDataloaderDict = {
     'className':                DataLoader,
     'args': {
-        'dataset':              TrainDatasetDict['className'],
+        'dataset':              None,
         'batch_size':           HyperparametersDict['args']['batch_size'],
         'shuffle':              True,
         'drop_last':            True,
@@ -74,7 +81,7 @@ TrainDataloaderDict = {
 ValidDataloaderDict = {
     'className':                DataLoader,
     'args': {
-        'dataset':              ValidDatasetDict['className'],
+        'dataset':              None,
         'batch_size':           HyperparametersDict['args']['batch_size'],
         'shuffle':              True,
         'drop_last':            True,
@@ -100,132 +107,70 @@ CriterionDict = {
 OptimizerDict = {
     'className':                optim.AdamW,
     'args': {
-       'params':                0,
+       'params':                None,
        'lr':                    HyperparametersDict['args']['learning_rate']
         }
 }
-
-#Core dict contains paths to folders, dtype used in model, device etc.
-CoreDict = {
-    'device':                   CurrentDevice,
-    'dtype':                    torch.float32,
-    #'model_save_path':          GetTrainingsPath(stem=str(ModelDict['className'])+"/epoch{}".format(HyperparametersDict['args']['num_epochs'])),
-    #'model_load_path':          GetTrainingsPath(stem=str(ModelDict['className'])+"/epoch{}".format(HyperparametersDict['args']['num_epochs'])),
-    #'model_inference_path':     GetInferencePath(stem=str(ModelDict['className'])+"/epoch{}".format(HyperparametersDict['args']['num_epochs']))
-}
-
+        
 """ 
     Training, Dataset, Model etc. config, device, dtype utility
 """
-class ConfigMapping:
-
+class ConfigMapping(dict):
+    
     """
-        Config Mapping for simple types, which does not 
-        require to be instantiated
+        Config Mapping for config utility, stores a pre-defined
+        values for training, inference, loss, model etc.
 
         e.g., 
-        current_dtype   = torch.float32
-        current_device  = torch.device("cpu")
-        my_dummy_bool   = True
+        config[HyperparametersDict]   = HyperparametersDict['args']
+        config[TrainDatasetDict]      = TrainDatasetDict['args']
+        config['device']              = torch.device("cpu")
     """
-    def __init__(self, mapping=None, **kwargs):
+    def __init__(self, mapping=None, *args:dict):
         if mapping is None:
             mapping = {}
-        if kwargs:
-            mapping.update({str(key): value for key, value in kwargs.items()})
+        if args:
+            for arg in args:
+                mapping[str(arg['className'].__name__)] = arg['args']
 
-        for key,value in mapping.items():
-            setattr(self, key, value)
-           
-    def __getitem__(self, key):
-        assert hasattr(self, key), f"Class does not have given {key} attribute, current attributes are: {list(self.__dict__.keys())}"
-        return getattr(self, key)
+        super().__init__(mapping)
 
-    def __setitem__(self, key:str=None, value:Any=None):
-        assert key is not None and value is not None, "key and value must be specified"
-        assert hasattr(self, key), f"Class does not have given {key} attribute, current attributes are: {list(self.__dict__.keys())}"
-        setattr(self, key, value)
-
-
-
-class ClassConfigMapping(ConfigMapping):
-
-    """
-        Config Mapping for Classes, which should be
-        instantiated by a real object
-
-        e.g., 
-        current_loss        = nn.MSELoss(...)
-        current_optimizer   = optim.Adam(...)
-    """
-    def __init__(self, mapping=None, **kwargs):
-        if mapping is None:
-            mapping = {}
-        if kwargs:
-            mapping.update({str(key): value for key, value in kwargs.items()})
-
-        fullSpec        = inspect.getfullargspec(mapping['className'])
-        requiredArgs    = fullSpec.args
-        specifiedArgs   = mapping['args']
-        requiredArgs.remove('self') #remove key "self" from requiredArgs, because it is not a required arg
-        for requiredArg in requiredArgs:
-            if requiredArg not in specifiedArgs.keys():
-                #If arg is not specified, then set it to None
-                mapping[requiredArg] = None
-                setattr(self, requiredArg, None)   
-                continue
-
-            setattr(self, requiredArg, specifiedArgs[requiredArg])
-
-        self.className = mapping['className']
-           
-    def __getitem__(self, key):
+    def __getitem__(self, key:str=None) -> Any:
+        assert key is not None
         return super().__getitem__(key)
 
-    def __setitem__(self, key:str=None, value:Any=None):
-        return super().__setitem__(key, value)
+    def __setitem__(self, key:[dict, str]=None, value:Union[dict, str, Any]=None):
+        assert key is not None and value is not None, "key and value must be specified"
+        super().__setitem__(key, value)
 
-    def __call__(self):
-        dictWithoutClassName = self.__dict__.copy()
-        dictWithoutClassName.pop("className")
-        return self.className(**dictWithoutClassName)
+    def __repr__(self) -> str:
+        output_str = str()
 
-    #DefaultDict['hyperparams'] =            hyperparams
-    #DefaultDict['train_ds'] =               train_ds
-    #DefaultDict['train_dataloader'] =       train_loader
-    #DefaultDict['valid_dataloader'] =       valid_loader
-    #DefaultDict['model'] =                  model
-    #DefaultDict['criterion'] =              criterion
-    #DefaultDict['optimizer'] =              optimizer
-    #DefaultDict['device'] =                 CurrentDevice
-    #DefaultDict['dtype'] =                  dtype
-    #DefaultDict['model_save_path'] =        GetTrainingsPath(stem=str(model))
-    #DefaultDict['model_load_path'] =        GetTrainingsPath(stem=str(model))
-    #DefaultDict['model_inference_path'] =   GetInferencePath(stem=str(model))
+        num_spaces = lambda len_str: 20 - len_str
+        tabulation = "  " #len == 2 -> is a amount of spaces, if value is dict, for better formatting e.g., tabulation (TAB)
+        for key, value in self.items():
+            if type(value) is dict:
+                output_str = output_str + f"{key} \n"
+                spaces = " "*num_spaces(len('ClassName')) 
+                output_str = output_str + f"{tabulation}ClassName: {spaces} {self[key]['className'].__name__} \n"
+                for subKey, subValue in self[key]['args'].items():
+                    spaces = " "*num_spaces(len(subKey))
+                    output_str = output_str + f"{tabulation}{subKey}: {spaces} {subValue} \n"
+            else:
+                spaces = " "*num_spaces(len(key) - len(tabulation)) 
+                output_str = output_str + f"{key}: {spaces} {value} \n"
 
-    #    # Create dataloader for training and validating
-    #train_loader = DataLoader(dataset=train_ds, batch_size=hyperparams.batch_size, shuffle=True, drop_last=True, pin_memory=True)
-    #valid_loader = DataLoader(dataset=valid_ds, batch_size=hyperparams.batch_size, shuffle=True, drop_last=True, pin_memory=True)
+        return output_str
 
-    ### Initialize network
-    ##model = Model_Custom(in_channels=hyperparams.in_channels, 
-    ##                     out_channels=hyperparams.out_channels).to(device=CurrentDevice, dtype=dtype)
-    ## Initialize network
-    #model = Model_NoCheckerboard(in_channels=hyperparams.in_channels, 
-    #                             out_channels=hyperparams.out_channels).to(device=CurrentDevice, dtype=dtype)
-
-    ## Loss and optimizer
-    #criterion = nn.MSELoss()
-    #optimizer = optim.AdamW(model.parameters(), lr=hyperparams.learning_rate)
-
-coreCfg                 = ConfigMapping(CoreDict)
-train_ds                = ClassConfigMapping(TrainDatasetDict)
-valid_ds                = ClassConfigMapping(ValidDatasetDict)
-train_loader            = ClassConfigMapping(TrainDataloaderDict)
-valid_loader            = ClassConfigMapping(ValidDataloaderDict)
-model                   = ClassConfigMapping(ModelDict)
-criterion               = ClassConfigMapping(CriterionDict)
-optimizer               = ClassConfigMapping(OptimizerDict)
-
-abc = criterion()
-print(1)
+           
+# Initialize config
+config = ConfigMapping(CoreDict)
+config['hyperparameters']         = HyperparametersDict
+config['trainDS']                 = TrainDatasetDict
+config['validDS']                 = ValidDatasetDict
+config['trainDL']                 = TrainDataloaderDict
+config['validDL']                 = ValidDataloaderDict
+config['model']                   = ModelDict
+config['criterion']               = CriterionDict
+config['optimizer']               = OptimizerDict
+print(config)

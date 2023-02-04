@@ -61,7 +61,7 @@ from datetime import date
 """
 
 def GetResultsPath(directory:PathType=None, stem:PathType=date.today()) -> Path:
-    if directory is None: directory = Path("E:/MASTERS/Upscaler/Results")
+    if directory is None: directory = Path("F:/MASTERS/Upscaler/Results")
     return_path = Path(directory/"{}".format(stem)) 
     if not return_path.exists():
         return_path.mkdir()
@@ -69,27 +69,14 @@ def GetResultsPath(directory:PathType=None, stem:PathType=date.today()) -> Path:
 
 ResultsPath = GetResultsPath()
 
-
 def GetTrainingsPath(directory:Path=ResultsPath, stem:PathType="baseline") -> Path:
     return_path = Path(directory/"Trainings"/stem)
     if not return_path.exists():
         return_path.mkdir(parents=True)
     return return_path
 
-TrainingsPath = GetTrainingsPath()
-
-
 def GetInferencePath(directory:Path=ResultsPath, stem:PathType="baseline") -> Path:
     return_path = Path(directory/"Inference"/stem)
     if not return_path.exists():
         return_path.mkdir(parents=True)
     return return_path
-
-InferenceResultsPath = GetInferencePath()
-
-
-
-from Config.TrainingConfig      import TrainingDictType, GetBaselineConfig
-
-# Configs for Trainings etc.
-TrainingConfig:TrainingDictType = GetBaselineConfig()
