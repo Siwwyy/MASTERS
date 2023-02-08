@@ -5,13 +5,13 @@ from NeuralNetworks.Model_NoCheckerboard        import Model_NoCheckerboard
 from Dataset.Dataset_Base                       import Dataset_Base
 from Dataset.Dataset_UE                         import Dataset_UE, FullDataset_UE
 from Config.Config                              import CurrentDevice, GetTrainingsPath, GetInferencePath
-from Config.TrainingConfig                      import ModelHyperparameters
 
 from torch.utils.data                           import DataLoader
 from torch                                      import optim
 from typing                                     import Any, Dict, Union, Optional
 from pathlib                                    import Path
 from functools                                  import partial
+from dataclasses                                import dataclass
 
 import torch
 import torch.nn                                 as nn
@@ -20,10 +20,23 @@ import inspect
 
 
 
+@dataclass()
+class ModelHyperparameters:
+    in_channels :int = 3
+    out_channels :int = 3
+    learning_rate :float = 0.001
+    batch_size :int = 32
+    num_epochs :int = 15
+
+    def __iter__(self):
+        return iter(astuple(self))
+
+
 
 
 #Core dict contains paths to folders, dtype used in model, device etc.
 CoreDict = {
+    'run_training':             False,
     'device':                   CurrentDevice,
     'dtype':                    torch.float32,
     'model_save_path':          GetTrainingsPath(stem="Model_NoCheckerboard"), #maybe use partial here
@@ -116,7 +129,6 @@ OptimizerDict = {
     Training, Dataset, Model etc. config, device, dtype utility
 """
 class ConfigMapping(dict):
-    
     """
         Config Mapping for config utility, stores a pre-defined
         values for training, inference, loss, model etc.
@@ -141,6 +153,7 @@ class ConfigMapping(dict):
 
     def __setitem__(self, key:[dict, str]=None, value:Union[dict, str, Any]=None):
         assert key is not None and value is not None, "key and value must be specified"
+        # TODO Check if every argument is specified in value, otherwise set to None or raise error
         super().__setitem__(key, value)
 
     def __repr__(self) -> str:
@@ -174,3 +187,29 @@ config['model']                   = ModelDict
 config['criterion']               = CriterionDict
 config['optimizer']               = OptimizerDict
 print(config)
+
+
+def initObjectFromConfig(className:type, *args, **kwargs):
+    """
+        Initializes object from given config, 
+
+        e.g., 
+        className == DataLoader
+        kwargs ==         
+            'dataset':              None,
+            'batch_size':           32,
+            'shuffle':              True,
+            'drop_last':            True,
+            'pin_memory':           True
+
+        Arg is optional, if args are specified, then function overwrites
+        kwargs from beginning to len(args) - 1
+    """
+
+    if len(args) != 0:
+        for idx, (kwargKey, kwargValue) in enumerate(kwargs.items()):
+            if idx == len(args):
+                break
+            kwargs[kwargKey] = args[idx]
+
+    return className(**kwargs)

@@ -5,8 +5,7 @@ from datetime                                   import date
 
 # Own imports
 from Config.Config                              import PathType, CurrentDevice
-from Config.DefaultConfigs                      import ConfigMapping
-from Config.TrainingConfig                      import ModelHyperparameters
+from Config.DefaultConfigs                      import ModelHyperparameters, ConfigMapping, initObjectFromConfig
 from NeuralNetworks.NN_Base                     import Model_Base
 from Dataset.Dataset_UE                         import save_exr, Dataset_UE, FullDataset_UE
 from Colorspace.PreProcessing                   import preprocessing_pipeline, depreprocessing_pipeline
@@ -82,14 +81,11 @@ def training_pipeline(config:ConfigMapping=None,
     hyperparams     = config['hyperparameters']['className'](**config['hyperparameters']['args'])
     train_ds        = config['trainDS']['className'](**config['trainDS']['args'])
     valid_ds        = config['validDS']['className'](**config['validDS']['args'])
-    config['trainDL']['args']['dataset'] = train_ds
-    config['validDL']['args']['dataset'] = valid_ds
-    train_loader    = config['trainDL']['className'](**config['trainDL']['args'])
-    valid_loader    = config['validDL']['className'](**config['validDL']['args'])
+    train_loader    = initObjectFromConfig(config['trainDL']['className'], train_ds, **config['trainDL']['args'])
+    valid_loader    = initObjectFromConfig(config['validDL']['className'], valid_ds, **config['validDL']['args'])
     model           = config['model']['className'](**config['model']['args'])
     criterion       = config['criterion']['className'](**config['criterion']['args'])
-    config['optimizer']['args']['params'] = model.parameters()
-    optimizer       = config['optimizer']['className'](**config['optimizer']['args'])
+    optimizer       = initObjectFromConfig(config['optimizer']['className'], model.parameters(), **config['optimizer']['args'])
     device          = config['device']
     dtype           = config['dtype']
 
@@ -97,9 +93,9 @@ def training_pipeline(config:ConfigMapping=None,
     if not training:
         return model
 
-    # Load checkpoint or not4
+    # Load checkpoint
     if model_load:
-        loaded_training_state_dict = load_model(TrainingConfigDict['model_load_path'])
+        loaded_training_state_dict = load_model(config['model_load_path'])
         model.load_state_dict(loaded_training_state_dict['model_state_dict'])
         optimizer.load_state_dict(loaded_training_state_dict['optimizer_state_dict'])
 
