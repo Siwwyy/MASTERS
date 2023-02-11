@@ -89,6 +89,8 @@ def training_pipeline(config:ConfigMapping=None,
     device          = config['device']
     dtype           = config['dtype']
 
+    model.to(device=device, dtype=dtype)
+
     # If training is False, then just return model | TODO, rethink that
     if not training:
         return model
@@ -183,7 +185,7 @@ def training_pipeline(config:ConfigMapping=None,
         # Model's Checkpoint saving
         if min_valid_loss > total_valid_loss:
             min_valid_loss = total_valid_loss
-            save_checkpoint(TrainingConfigDict['model_save_path'],
+            save_checkpoint(config['model_save_path'],
                             "model_float32_best".format(str(epoch)),
                             epoch,
                             model,
@@ -203,7 +205,7 @@ def training_pipeline(config:ConfigMapping=None,
                     hyperparams.num_epochs)
 
     # Save model's checkpoint
-    save_checkpoint(TrainingConfigDict['model_save_path'],
+    save_checkpoint(config['model_save_path'],
                     "model_float32_final",
                     hyperparams.num_epochs,
                     model,

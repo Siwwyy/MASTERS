@@ -42,9 +42,8 @@ class Model_NoCheckerboard(Model_Base):
         self.out_channels = out_channels
 
         # Amout of conv features per layer
-        divider = 8
-        #conv_features = np.array([64//divider, 128//divider, 256//divider, 512//divider], dtype=np.int32)
-        conv_features = np.array([4, 8, 16, 32], dtype=np.int32)
+        divider = 4
+        conv_features = np.array([64//divider, 128//divider, 256//divider, 512//divider], dtype=np.int32)
 
         # Skip connections
         self.skip_connections = [torch.empty((1,1,1,1)), torch.empty((1,1,1,1)), torch.empty((1,1,1,1)), torch.empty((1,1,1,1))]

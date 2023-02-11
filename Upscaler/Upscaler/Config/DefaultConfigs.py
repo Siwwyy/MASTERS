@@ -32,19 +32,7 @@ class ModelHyperparameters:
         return iter(astuple(self))
 
 
-
-
-#Core dict contains paths to folders, dtype used in model, device etc.
-CoreDict = {
-    'run_training':             False,
-    'device':                   CurrentDevice,
-    'dtype':                    torch.float32,
-    'model_save_path':          GetTrainingsPath(stem="Model_NoCheckerboard"), #maybe use partial here
-    'model_load_path':          GetTrainingsPath(stem="Model_NoCheckerboard"),
-    'model_inference_path':     GetInferencePath(stem="Model_NoCheckerboard"),
-}
-
-#Default Configs for objects, pipelines etc.  used in project
+#Default Configs Hyperparameters of model
 HyperparametersDict = {
     'className':                ModelHyperparameters,
     'args': {
@@ -52,8 +40,18 @@ HyperparametersDict = {
         'out_channels':         3,
         'learning_rate':        0.0001,
         'batch_size':           32,
-        'num_epochs':           600
+        'num_epochs':           1000
         }
+}
+
+#Core dict contains paths to folders, dtype used in model, device etc.
+CoreDict = {
+    'run_training':             True,
+    'device':                   CurrentDevice,
+    'dtype':                    torch.float32,
+    'model_save_path':          GetTrainingsPath(stem=f"Model_NoCheckerboard/Epochs_{HyperparametersDict['args']['num_epochs']}"), #maybe use partial here
+    'model_load_path':          GetTrainingsPath(stem=f"Model_NoCheckerboard/Epochs_{HyperparametersDict['args']['num_epochs']}"),
+    'model_inference_path':     GetInferencePath(stem=f"Model_NoCheckerboard/Epochs_{HyperparametersDict['args']['num_epochs']}"),
 }
 
 TrainDatasetDict = {
