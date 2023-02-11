@@ -1,26 +1,22 @@
-from typing                         import Dict, Union, Any
-from pathlib                        import Path
-from dataclasses                    import dataclass
-from tqdm                           import tqdm  # For nice progress bar when training the data!
-from datetime                       import date
+from typing                                     import Dict, Union, Any
+from pathlib                                    import Path
+from tqdm                                       import tqdm  # For nice progress bar when training the data!
+from datetime                                   import date
 
 # Own imports
-from Config.Config                  import PathType, CurrentDevice, TrainingsPath, TrainingDictType
-from Config.TrainingConfig          import ModelHyperparameters
-from NeuralNetworks.NN_Base         import Model_Base
-from Dataset.Dataset_UE             import Dataset_UE, save_exr
-from Dataset.Dataset_Base           import Dataset_Base
-from Colorspace.PreProcessing       import preprocessing_pipeline, depreprocessing_pipeline
-from NeuralNetworks.UNet            import Model_UNET
-from NeuralNetworks.Model_Custom    import Model_Custom
-from Utils.Utils                    import save_model, load_model
+from Config.Config                              import PathType, CurrentDevice
+from Config.DefaultConfigs                      import ModelHyperparameters, ConfigMapping, initObjectFromConfig
+from NeuralNetworks.NN_Base                     import Model_Base
+from Dataset.Dataset_UE                         import save_exr, Dataset_UE, FullDataset_UE
+from Colorspace.PreProcessing                   import preprocessing_pipeline, depreprocessing_pipeline
+from Utils.Utils                                import save_model, load_model
 
 # Libs imports
-from torch                          import optim       # For optimizers like SGD, Adam, etc.
-from torch.utils.data               import DataLoader
+from torch                                      import optim       # For optimizers like SGD, Adam, etc.
+from torch.utils.data                           import DataLoader
 import torch
-import torch.nn                     as nn
-import numpy                        as np
+import torch.nn                                 as nn
+import numpy                                    as np
 
 # Turn on cudnn backend and benchmark for better performance
 torch.backends.cudnn.benchmark = True
@@ -75,31 +71,33 @@ def plot_loss_valid(train_loss:list=None, valid_loss:list=None, epochs:int=10):
     plt.show()
 
 
-def training_pipeline(TrainingConfigDict:TrainingDictType=None, 
+def training_pipeline(config:ConfigMapping=None, 
                       training:bool=True, 
                       model_load:bool=False) -> Model_Base:
     """
         Training pipeline
     """
+    # Init of Hyperparams, dataset, dataloader, model etc.
+    hyperparams     = config['hyperparameters']['className'](**config['hyperparameters']['args'])
+    train_ds        = config['trainDS']['className'](**config['trainDS']['args'])
+    valid_ds        = config['validDS']['className'](**config['validDS']['args'])
+    train_loader    = initObjectFromConfig(config['trainDL']['className'], train_ds, **config['trainDL']['args'])
+    valid_loader    = initObjectFromConfig(config['validDL']['className'], valid_ds, **config['validDL']['args'])
+    model           = config['model']['className'](**config['model']['args'])
+    criterion       = config['criterion']['className'](**config['criterion']['args'])
+    optimizer       = initObjectFromConfig(config['optimizer']['className'], model.parameters(), **config['optimizer']['args'])
+    device          = config['device']
+    dtype           = config['dtype']
 
-    # Hyperparams, dataset, dataloader, model etc.
-    hyperparams =   TrainingConfigDict['hyperparams']
-    train_ds =      TrainingConfigDict['train_ds']
-    train_loader =  TrainingConfigDict['train_dataloader']
-    valid_loader =  TrainingConfigDict['valid_dataloader']
-    model =         TrainingConfigDict['model']
-    criterion =     TrainingConfigDict['criterion']
-    optimizer =     TrainingConfigDict['optimizer']
-    device =        TrainingConfigDict['device']
-    dtype =         TrainingConfigDict['dtype']
+    model.to(device=device, dtype=dtype)
 
     # If training is False, then just return model | TODO, rethink that
     if not training:
         return model
 
-    # Load checkpoint or not4
+    # Load checkpoint
     if model_load:
-        loaded_training_state_dict = load_model(TrainingConfigDict['model_load_path'])
+        loaded_training_state_dict = load_model(config['model_load_path'])
         model.load_state_dict(loaded_training_state_dict['model_state_dict'])
         optimizer.load_state_dict(loaded_training_state_dict['optimizer_state_dict'])
 
@@ -187,7 +185,7 @@ def training_pipeline(TrainingConfigDict:TrainingDictType=None,
         # Model's Checkpoint saving
         if min_valid_loss > total_valid_loss:
             min_valid_loss = total_valid_loss
-            save_checkpoint(TrainingConfigDict['model_save_path'],
+            save_checkpoint(config['model_save_path'],
                             "model_float32_best".format(str(epoch)),
                             epoch,
                             model,
@@ -207,7 +205,7 @@ def training_pipeline(TrainingConfigDict:TrainingDictType=None,
                     hyperparams.num_epochs)
 
     # Save model's checkpoint
-    save_checkpoint(TrainingConfigDict['model_save_path'],
+    save_checkpoint(config['model_save_path'],
                     "model_float32_final",
                     hyperparams.num_epochs,
                     model,

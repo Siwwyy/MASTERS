@@ -42,7 +42,7 @@ class Model_NoCheckerboard(Model_Base):
         self.out_channels = out_channels
 
         # Amout of conv features per layer
-        divider = 8
+        divider = 4
         conv_features = np.array([64//divider, 128//divider, 256//divider, 512//divider], dtype=np.int32)
 
         # Skip connections
@@ -99,7 +99,7 @@ class Model_NoCheckerboard(Model_Base):
 
 def test():
     x = torch.randn((1, 3, 3840, 2160))
-    model = Model_UNET(in_channels=3, out_channels=3)
+    model = Model_NoCheckerboard(in_channels=3, out_channels=3)
     preds = model(x)
     assert preds.shape == x.shape
 

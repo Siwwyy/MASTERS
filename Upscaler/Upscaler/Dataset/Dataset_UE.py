@@ -258,7 +258,8 @@ class FullDataset_UE(Dataset_Base): #maybe derive from nn.Dataset instead of Dat
         for ue_project in ue_projects_list:
             tempDataset = Dataset_UE(ds_root_path=Path(ds_root_path/ue_project/"DumpedBuffers/"),
                                      csv_root_path=Path(ds_root_path/ue_project/"DumpedBuffers/info_Native.csv"),
-                                     crop_coords=crop_coords, 
+                                     crop_coords=crop_coords,
+                                     transforms=transforms,
                                      cached=cached)
             self.dataset_list.append(tempDataset)
             self.dataset_size += len(tempDataset) # accumulate dataset length, due to multiple ue projects
