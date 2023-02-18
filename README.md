@@ -1,5 +1,8 @@
 # MASTERS
 
+## About
+
+Super-Resolution UNET Based NN architecture
 
 
 ## Pre Commit hook installation
