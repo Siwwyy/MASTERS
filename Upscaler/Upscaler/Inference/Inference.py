@@ -56,6 +56,7 @@ def Inference_pipeline(outputs_save_path:PathType=None, model:Model_Base=None, d
         save_exr(str(outputs_save_path/"hdr_pred.exr"), pred_hdr.squeeze(0).cpu().half())
 
         # Print info about similaritiness and range of prediction, target
+        print(outputs_save_path.stem)
         print("Pred min: ", torch.min(pred_ldr), "| Pred max: ", torch.max(pred_ldr))
         print("Target min: ", torch.min(hr), "| Target max: ", torch.max(hr))
         ssim = StructuralSimilarityIndexMeasure(data_range=1.0)
