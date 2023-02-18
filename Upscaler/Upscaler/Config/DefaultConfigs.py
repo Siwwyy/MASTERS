@@ -161,8 +161,8 @@ class ConfigMapping(dict):
     def __repr__(self) -> str:
         output_str = str()
 
-        num_spaces = lambda len_str: 20 - len_str
-        tabulation = "  " #len == 2 -> is a amount of spaces, if value is dict, for better formatting e.g., tabulation (TAB)
+        num_spaces = lambda len_str: 25 - len_str
+        tabulation = "  " #len == 2 -> is a amount of spaces, if value is dict, for better formatting e.g., tabulation (TAB, tabulation is usually a 4 spaces)
         for key, value in self.items():
             if type(value) is dict:
                 output_str = output_str + f"{key} \n"
@@ -215,3 +215,11 @@ def initObjectFromConfig(className:type, *args, **kwargs):
             kwargs[kwargKey] = args[idx]
 
     return className(**kwargs)
+
+
+def configJSONSerializer(config:ConfigMapping=None):
+    assert config is not None, "config must be specified"
+    import json
+
+    with open(config['model_save_path']/'convert.json', 'w') as convertFile:
+        convertFile.write(str(config))

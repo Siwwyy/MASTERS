@@ -1,7 +1,7 @@
 
 # Own imports
 from Config.Config              import Path
-from Config.DefaultConfigs      import config
+from Config.DefaultConfigs      import config, configJSONSerializer
 from Dataset.Dataset_UE         import Dataset_UE
 from Utils.Utils                import save_model, load_model
 from Training_Pipeline          import training_pipeline
@@ -19,7 +19,7 @@ trained_model = training_pipeline(config, training=config['run_training'], model
 time_elapsed = datetime.now() - start_time 
 
 print('\nTraining Time elapsed (hh:mm:ss.ms) {}'.format(time_elapsed))
-
+configJSONSerializer(config) #save config to json
 
 ##################
 # Inference Time #
