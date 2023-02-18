@@ -124,15 +124,15 @@ def training_pipeline(config:ConfigMapping=None,
             data    = data.to(device=device, dtype=dtype)
             target  = target.to(device=device, dtype=dtype)
 
-            #save_exr(str("E:/MASTERS/TEST/DATA/HDR/data_hdr_iter{}.exr".format(batch_idx * epoch + batch_idx)), data.squeeze(0).cpu().half())
-            #save_exr(str("E:/MASTERS/TEST/TARGET/HDR/target_hdr_iter{}.exr".format(batch_idx * epoch + batch_idx)), target.squeeze(0).cpu().half())
+            #save_exr(str("F:/MASTERS/TEST/DATA/HDR/data_hdr_iter{}.exr".format(batch_idx * epoch + batch_idx)), data.squeeze(0).cpu().half())
+            #save_exr(str("F:/MASTERS/TEST/TARGET/HDR/target_hdr_iter{}.exr".format(batch_idx * epoch + batch_idx)), target.squeeze(0).cpu().half())
 
             # PreProcess the data
             data    = preprocessing_pipeline(data)
             target  = preprocessing_pipeline(target)
 
-            #save_exr(str("E:/MASTERS/TEST/DATA/LDR/data_ldr_iter{}.exr".format(batch_idx * epoch + batch_idx)), data.squeeze(0).cpu().half())
-            #save_exr(str("E:/MASTERS/TEST/TARGET/LDR/target_ldr_iter{}.exr".format(batch_idx * epoch + batch_idx)), target.squeeze(0).cpu().half())
+            #save_exr(str("F:/MASTERS/TEST/DATA/LDR/data_ldr_iter{}.exr".format(batch_idx * epoch + batch_idx)), data.squeeze(0).cpu().half())
+            #save_exr(str("F:/MASTERS/TEST/TARGET/LDR/target_ldr_iter{}.exr".format(batch_idx * epoch + batch_idx)), target.squeeze(0).cpu().half())
 
             # forward
             pred = model(data)
@@ -162,8 +162,8 @@ def training_pipeline(config:ConfigMapping=None,
                 data    = preprocessing_pipeline(data)
                 target  = preprocessing_pipeline(target)
 
-                #save_exr(str("E:/MASTERS/TEST/DATA/LDR/data_ldr_iter{}.exr".format(batch_idx * epoch + batch_idx)), data.squeeze(0).cpu().half())
-                #save_exr(str("E:/MASTERS/TEST/TARGET/LDR/target_ldr_iter{}.exr".format(batch_idx * epoch + batch_idx)), target.squeeze(0).cpu().half())
+                #save_exr(str("F:/MASTERS/TEST/DATA/LDR/data_ldr_iter{}.exr".format(batch_idx * epoch + batch_idx)), data.squeeze(0).cpu().half())
+                #save_exr(str("F:/MASTERS/TEST/TARGET/LDR/target_ldr_iter{}.exr".format(batch_idx * epoch + batch_idx)), target.squeeze(0).cpu().half())
 
                 # forward
                 pred = model(data)

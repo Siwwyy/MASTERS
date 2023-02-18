@@ -58,6 +58,9 @@
     <Compile Include="Losses\Loss_Base.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Losses\Loss_Combined.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Losses\Loss_MAE.py">
       <SubType>Code</SubType>
     </Compile>

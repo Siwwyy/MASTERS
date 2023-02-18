@@ -14,7 +14,7 @@ from datetime import datetime
 
 start_time = datetime.now() 
 
-trained_model = training_pipeline(config, training=config['run_training'], model_load=False)
+trained_model = training_pipeline(config, training=config['run_training'], model_load=config['load_model'])
 
 time_elapsed = datetime.now() - start_time 
 

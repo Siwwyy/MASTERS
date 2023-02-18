@@ -5,27 +5,23 @@ import torch.nn                     as nn
 from Losses.Loss_Base               import Loss_Base
 from Config.Config                  import TensorType
 
-# from Config.config import TensorType
-
-
 class Loss_MSE(Loss_Base):
     def __init__(
         self,
-        reduction="mean"
+        reduction: str ="mean"
     ):
-        super().__init__()
-        self.name = "Loss_MSE"
+        super().__init__("Loss_MSE")
         self.reduction = reduction
 
-    def forward(self, x: TensorType = None, y_pred: TensorType = None) -> TensorType:
-        assert x is not None, "Input tensor X can't be None!"
-        assert y_pred is not None, "Input tensor Y_pred can't be None!"
+    def forward(self, pred: TensorType = None, target: TensorType = None) -> TensorType:
+        assert pred is not None, "Input tensor pred can't be None!"
+        assert target is not None, "Input tensor target can't be None!"
         
         if self.reduction == "none":
-            return (x - y_pred).pow(2)
+            return (pred - target).pow(2)
         elif self.reduction == "sum":
-            return (x - y_pred).pow(2).sum()
-        return (x - y_pred).pow(2).mean()
+            return (pred - target).pow(2).sum()
+        return (pred - target).pow(2).mean()
 
 
 def test():

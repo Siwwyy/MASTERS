@@ -1,3 +1,5 @@
+from Losses.Loss_Combined                       import Loss_Combined
+from Losses.Loss_MAE                            import Loss_MAE
 from NeuralNetworks.NN_Base                     import Model_Base
 from NeuralNetworks.UNet                        import Model_UNET
 from NeuralNetworks.Model_Custom                import Model_Custom
@@ -40,13 +42,14 @@ HyperparametersDict = {
         'out_channels':         3,
         'learning_rate':        0.0001,
         'batch_size':           32,
-        'num_epochs':           1000
+        'num_epochs':           600
         }
 }
 
 #Core dict contains paths to folders, dtype used in model, device etc.
 CoreDict = {
     'run_training':             True,
+    'load_model':               False,
     'device':                   CurrentDevice,
     'dtype':                    torch.float32,
     'model_save_path':          GetTrainingsPath(stem=f"Model_NoCheckerboard/Epochs_{HyperparametersDict['args']['num_epochs']}"), #maybe use partial here
@@ -62,7 +65,7 @@ TrainDatasetDict = {
         'ue_projects_list':     ["SubwaySequencer_4_26_2", "Rainforest_Scene_4_26_2"],
         'crop_coords':          (900, 1028, 500, 628),
         'transforms':           None,
-        'cached':               False
+        'cached':               True
         }
 }
 
@@ -74,7 +77,7 @@ ValidDatasetDict = {
         'csv_root_path':        Path("F:/MASTERS/UE4/DATASET/InfiltratorDemo_4_26_2/DumpedBuffers/info_Native.csv"),
         'crop_coords':          (900, 1028, 500, 628),
         'transforms':           None,
-        'cached':               False
+        'cached':               True
         }
 }
 
@@ -109,9 +112,10 @@ ModelDict = {
 }
 
 CriterionDict = {
-    'className':                nn.MSELoss,
+    'className':                Loss_Combined,
     'args': {
-       'reduction':             'mean' 
+       'criterions':            [ Loss_MAE() ],
+       'criterionContribution': [ 1.0 ]
        }
 }
 
