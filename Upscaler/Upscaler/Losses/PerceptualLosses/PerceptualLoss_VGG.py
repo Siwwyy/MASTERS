@@ -15,7 +15,12 @@ class VGG19(nn.Module):
 
         self.model = vgg19(pretrained=True)
         self.modelFeatures = self.model.features
-        # Get VGG19 features and turn eval mode (no gradients needed)
+
+        # Turn off requires_grad for parameters in VGG19
+        for param in self.model.parameters():
+            param.requires_grad = False
+
+        # Get VGG19 features and turn eval mode (no dropouts, bn needed)
         self.vggBlocks = vggblocksNamedTuple(*[ self.modelFeatures[slice].eval() for slice in blocksSlice])
 
 
