@@ -1,7 +1,6 @@
-
-from __future__     import annotations
-from typing         import Union, Annotated, Dict
-from pathlib        import Path
+from __future__ import annotations
+from typing import Union, Annotated, Dict
+from pathlib import Path
 
 import torch
 
@@ -56,27 +55,37 @@ CurrentDevice: torch.device = try_gpu(gpu_idx=0)
 
 
 from datetime import date
+
 """ 
     Training ,inference ... results saving path
 """
 
-def GetResultsPath(directory:PathType=None, stem:PathType=date.today()) -> Path:
-    if directory is None: directory = Path("F:/MASTERS/Upscaler/Results")
-    return_path = Path(directory/"{}".format(stem)) 
+
+def GetResultsPath(directory: PathType = None, stem: PathType = date.today()) -> Path:
+    if directory is None:
+        directory = Path("F:/MASTERS/Upscaler/Results")
+    return_path = Path(directory / "{}".format(stem))
     if not return_path.exists():
         return_path.mkdir()
     return return_path
 
+
 ResultsPath = GetResultsPath()
 
-def GetTrainingsPath(directory:Path=ResultsPath, stem:PathType="baseline") -> Path:
-    return_path = Path(directory/"Trainings"/stem)
+
+def GetTrainingsPath(
+    directory: Path = ResultsPath, stem: PathType = "baseline"
+) -> Path:
+    return_path = Path(directory / "Trainings" / stem)
     if not return_path.exists():
         return_path.mkdir(parents=True)
     return return_path
 
-def GetInferencePath(directory:Path=ResultsPath, stem:PathType="baseline") -> Path:
-    return_path = Path(directory/"Inference"/stem)
+
+def GetInferencePath(
+    directory: Path = ResultsPath, stem: PathType = "baseline"
+) -> Path:
+    return_path = Path(directory / "Inference" / stem)
     if not return_path.exists():
         return_path.mkdir(parents=True)
     return return_path

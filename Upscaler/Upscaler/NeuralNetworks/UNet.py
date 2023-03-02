@@ -1,13 +1,12 @@
 import torch
-import torch.nn                             as nn
-import torch.nn.functional                  as F
-import torchvision.transforms.functional    as tvf
-import numpy                                as np
+import torch.nn as nn
+import torch.nn.functional as F
+import torchvision.transforms.functional as tvf
+import numpy as np
 
-from NeuralNetworks.NN_Base                 import Model_Base
-from Config.Config                          import TensorType, ShapeType
-from typing                                 import Optional, Tuple
-
+from NeuralNetworks.NN_Base import Model_Base
+from Config.Config import TensorType, ShapeType
+from typing import Optional, Tuple
 
 
 class DoubleConv(nn.Module):
@@ -144,7 +143,12 @@ class Model_UNET(Model_Base):
         conv_features = np.array([64, 128, 256, 512], dtype=np.int32)
 
         # Skip connections
-        self.skip_connections = [torch.empty((1,1,1,1)), torch.empty((1,1,1,1)), torch.empty((1,1,1,1)), torch.empty((1,1,1,1))]
+        self.skip_connections = [
+            torch.empty((1, 1, 1, 1)),
+            torch.empty((1, 1, 1, 1)),
+            torch.empty((1, 1, 1, 1)),
+            torch.empty((1, 1, 1, 1)),
+        ]
 
         # Downsample layers
         self.downsample_block1 = DownsampleBlock(in_channels, conv_features[0])
@@ -162,7 +166,7 @@ class Model_UNET(Model_Base):
         self.upsample_block4 = UpsampleBlock(conv_features[0] * 2, conv_features[0])
 
         # Last upsample conv
-        #self.upsample_block5 = UpsampleBlock(conv_features[0], conv_features[0] // 2)
+        # self.upsample_block5 = UpsampleBlock(conv_features[0], conv_features[0] // 2)
         self.upsample_block5 = nn.ConvTranspose2d(
             conv_features[0], conv_features[0] // 2, kernel_size=2, stride=2
         )
@@ -190,7 +194,6 @@ class Model_UNET(Model_Base):
             x = upsample_block(
                 x, self.skip_connections[len(self.skip_connections) - idx]
             )
-        
 
         x = self.upsample_block5(x)
         # Final, last conv

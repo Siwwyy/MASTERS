@@ -1,12 +1,11 @@
-
 import torch
-import torch.nn                             as nn
-import torch.nn.functional                  as F
-import torchvision.transforms.functional    as tvf
-import numpy                                as np
+import torch.nn as nn
+import torch.nn.functional as F
+import torchvision.transforms.functional as tvf
+import numpy as np
 
-from Config.Config                          import TensorType, ShapeType
-from typing                                 import Optional, Tuple
+from Config.Config import TensorType, ShapeType
+from typing import Optional, Tuple
 
 
 # UNET Based pre-defined blocks
@@ -110,7 +109,7 @@ class UpsampleBlock(nn.Module):
         return self.conv(x)
 
 
-#UNET similar Upsample Block, but with analytic Upscale instead ConvTranspose2D
+# UNET similar Upsample Block, but with analytic Upscale instead ConvTranspose2D
 class UpscaleBlock(nn.Module):
     """
     Upsample Block of UNET
@@ -128,14 +127,20 @@ class UpscaleBlock(nn.Module):
     ----------
     """
 
-    def __init__(self, in_channels: int, out_channels: int,
-                 scale_factor:int=2, mode:str='nearest'):
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        scale_factor: int = 2,
+        mode: str = "nearest",
+    ):
         super().__init__()
 
-
-        self.upscale_layer  = nn.Sequential(nn.Upsample(scale_factor=scale_factor, mode=mode),
-                                            nn.Conv2d(in_channels, in_channels//2, kernel_size=1)) #1x1 conv, to accomplish what ConvTranspose2d does, kind of kernel_size
-        self.conv           = DoubleConv(in_channels, out_channels)
+        self.upscale_layer = nn.Sequential(
+            nn.Upsample(scale_factor=scale_factor, mode=mode),
+            nn.Conv2d(in_channels, in_channels // 2, kernel_size=1),
+        )  # 1x1 conv, to accomplish what ConvTranspose2d does, kind of kernel_size
+        self.conv = DoubleConv(in_channels, out_channels)
 
     def forward(
         self, x: TensorType = None, skip_connection: TensorType = None
