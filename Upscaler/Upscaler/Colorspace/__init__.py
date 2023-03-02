@@ -1,1 +1,1 @@
-from Colorspace.PreProcessing       import *
+from Colorspace.PreProcessing import *
