@@ -231,5 +231,5 @@ def configJSONSerializer(config: ConfigMapping = None):
     assert config is not None, "config must be specified"
     import json
 
-    with open(config["model_save_path"] / "convert.json", "w") as convertFile:
+    with open(config["model_save_path"] / "training_config.json", "w") as convertFile:
         convertFile.write(str(config))
