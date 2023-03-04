@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 from Losses.Loss_Base import Loss_Base
-from Config.Config import TensorType
+from Config.Config import TensorType, CurrentDevice
 from typing import Union, Optional, List
 
 
@@ -10,7 +10,8 @@ class Loss_Combined(Loss_Base):
     def __init__(
         self,
         criterions: Optional[Union[Loss_Base, torch.nn.modules.loss._Loss]] = None,
-        criterionContribution: Optional[Union[List[float], List[torch.tensor]]] = None,
+        criterionContribution: Optional[List[Union[float, torch.tensor]]] = None,
+        device: torch.device = CurrentDevice,
     ):
         super().__init__("Loss_Combined")
         self.criterions = criterions
@@ -19,6 +20,9 @@ class Loss_Combined(Loss_Base):
         if self.criterions is None:
             self.criterions = [nn.MSELoss()]
             self.criterionContribution = [1.0]
+
+        for criterions in self.criterions:
+            criterions.to(device)
 
         assert len(self.criterions) == len(
             self.criterionContribution

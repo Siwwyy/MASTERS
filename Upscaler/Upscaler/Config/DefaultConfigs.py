@@ -1,5 +1,6 @@
 from Losses.Loss_Combined import Loss_Combined
 from Losses.Loss_MAE import Loss_MAE
+from Losses.PerceptualLosses.PerceptualLoss_VGG import PerceptualLoss_VGG
 from NeuralNetworks.NN_Base import Model_Base
 from NeuralNetworks.UNet import Model_UNET
 from NeuralNetworks.Model_Custom import Model_Custom
@@ -69,7 +70,7 @@ TrainDatasetDict = {
         "ue_projects_list": ["SubwaySequencer_4_26_2", "Rainforest_Scene_4_26_2"],
         "crop_coords": (900, 1028, 500, 628),
         "transforms": None,
-        "cached": True,
+        "cached": False,
     },
 }
 
@@ -85,7 +86,7 @@ ValidDatasetDict = {
         ),
         "crop_coords": (900, 1028, 500, 628),
         "transforms": None,
-        "cached": True,
+        "cached": False,
     },
 }
 
@@ -121,7 +122,11 @@ ModelDict = {
 
 CriterionDict = {
     "className": Loss_Combined,
-    "args": {"criterions": [Loss_MAE()], "criterionContribution": [1.0]},
+    "args": {
+        "criterions": [Loss_MAE(), PerceptualLoss_VGG()],
+        "criterionContribution": [0.5, 0.5],
+        "device": CurrentDevice,
+    },
 }
 
 OptimizerDict = {

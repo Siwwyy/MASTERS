@@ -9,9 +9,6 @@ from Training_Pipeline import training_pipeline
 # Training Time #
 #################
 
-from Losses.PerceptualLosses.PerceptualLoss_VGG import VGG19
-
-model = VGG19()
 
 from datetime import datetime
 
