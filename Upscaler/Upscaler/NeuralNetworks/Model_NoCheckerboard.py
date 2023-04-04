@@ -74,11 +74,13 @@ class Model_NoCheckerboard(Model_Base):
             nn.Upsample(scale_factor=2, mode="nearest"),
             nn.Conv2d(conv_features[0], conv_features[0] // 2, kernel_size=1),
         )  # 1x1 conv, to accomplish what ConvTranspose2d does, kind of kernel_size
-        # self.upsample_block5 = UpscaleBlock(conv_features[0], conv_features[0] // 2)
 
+        #self.upsample_block5 = UpscaleBlock(conv_features[0], conv_features[0] // 2)
+        #self.upsample_block5 = nn.PixelShuffle(upscale_factor=2)
         # Final convolution
         self.final_conv = nn.Conv2d(
             conv_features[0] // 2, self.out_channels, kernel_size=1
+            #4, self.out_channels, kernel_size=1 #4, because pixel shuffle
         )  # 1x1 convolution at the end
 
     def forward(self, x: TensorType = None) -> TensorType:
@@ -91,7 +93,7 @@ class Model_NoCheckerboard(Model_Base):
             self.skip_connections[idx - 1] = x1
 
         # Bottleneck
-        x = self.bottleneck(x).clone()
+        x = self.bottleneck(x)
 
         # Upsample
         for idx in [1, 2, 3, 4]:
@@ -101,6 +103,7 @@ class Model_NoCheckerboard(Model_Base):
             )
 
         x = self.upsample_block5(x)
+
         # Final, last conv
         return self.final_conv(x)
 
