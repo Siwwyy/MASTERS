@@ -8,6 +8,7 @@ from Config.Config import TensorType, ShapeType
 from typing import Optional, Tuple
 
 
+
 # UNET Based pre-defined blocks
 class DoubleConv(nn.Module):
     """
@@ -32,6 +33,13 @@ class DoubleConv(nn.Module):
             nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True),
         )
+
+        
+        #def init_weights(conv):
+        #    if isinstance(conv, nn.Conv2d):
+        #        torch.nn.init.kaiming_normal_(conv.weight)
+
+        #self.conv.apply(init_weights)
 
     def forward(self, x: TensorType = None) -> TensorType:
         assert x is not None, "Input tensor X can't be None!"
@@ -68,7 +76,7 @@ class DownsampleBlock(nn.Module):
     def forward(self, x: TensorType = None) -> Tuple[TensorType, TensorType]:
         assert x is not None, "Input tensor X can't be None!"
 
-        conv_out = self.conv(x).clone()
+        conv_out = self.conv(x)
         return self.pool(conv_out), conv_out
 
 

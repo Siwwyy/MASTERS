@@ -18,7 +18,7 @@ class Loss_Combined(Loss_Base):
         self.criterionContribution = criterionContribution
 
         if self.criterions is None:
-            self.criterions = [nn.MSELoss()]
+            self.criterions = nn.ModuleList([nn.MSELoss()])
             self.criterionContribution = [1.0]
 
         for criterions in self.criterions:
@@ -28,7 +28,7 @@ class Loss_Combined(Loss_Base):
             self.criterionContribution
         ), "Amount of criterions must match criterionContribution amount"
 
-    def forward(self, pred: TensorType = None, target: TensorType = None) -> TensorType:
+    def forward(self, pred: TensorType = None, target: TensorType = None) -> TensorType: #TODO maybe change pred, target to *args, **kwargs
         assert pred is not None, "Input tensor pred can't be None!"
         assert target is not None, "Input tensor target can't be None!"
 
@@ -41,6 +41,9 @@ class Loss_Combined(Loss_Base):
             finalLoss = finalLoss + criterionContribution * criterion(pred, target)
 
         return finalLoss
+
+    def __repr__(self):
+        return "Loss_Combined | Criterions: " + str(self.criterions) + " | Loss Contribution: "+ str(self.criterionContribution)
 
 
 def test():
