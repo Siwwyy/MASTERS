@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 
-from Losses.Loss_Base import Loss_Base
-from Config.Config import TensorType
+from .Loss_Base import Loss_Base
+from Config import TensorType
 
 
 class Loss_MSE(Loss_Base):

@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 from Losses.Loss_Base import Loss_Base
-from Config.Config import TensorType, CurrentDevice
+from Config import TensorType, CurrentDevice
 from typing import Union, Optional, List
 
 
@@ -28,7 +28,9 @@ class Loss_Combined(Loss_Base):
             self.criterionContribution
         ), "Amount of criterions must match criterionContribution amount"
 
-    def forward(self, pred: TensorType = None, target: TensorType = None) -> TensorType: #TODO maybe change pred, target to *args, **kwargs
+    def forward(
+        self, pred: TensorType = None, target: TensorType = None
+    ) -> TensorType:  # TODO maybe change pred, target to *args, **kwargs
         assert pred is not None, "Input tensor pred can't be None!"
         assert target is not None, "Input tensor target can't be None!"
 
@@ -43,7 +45,12 @@ class Loss_Combined(Loss_Base):
         return finalLoss
 
     def __repr__(self):
-        return "Loss_Combined | Criterions: " + str(self.criterions) + " | Loss Contribution: "+ str(self.criterionContribution)
+        return (
+            "Loss_Combined | Criterions: "
+            + str(self.criterions)
+            + " | Loss Contribution: "
+            + str(self.criterionContribution)
+        )
 
 
 def test():

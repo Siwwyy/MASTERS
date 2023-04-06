@@ -190,7 +190,9 @@ class Dataset_UE(Dataset_Base):
         self.cached = cached
         if self.cached:
             self.cache_lr = torch.empty(
-                (self.dataset_size, 3, 128, 128), dtype=torch.float16, device="cpu" #TODO Make cache tensors HW manageable automatically via crop_coords
+                (self.dataset_size, 3, 128, 128),
+                dtype=torch.float16,
+                device="cpu",  # TODO Make cache tensors HW manageable automatically via crop_coords
             )
             self.cache_hr = torch.empty(
                 (self.dataset_size, 3, 256, 256), dtype=torch.float16, device="cpu"

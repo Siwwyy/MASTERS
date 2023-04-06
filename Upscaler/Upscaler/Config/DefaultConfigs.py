@@ -46,22 +46,16 @@ HyperparametersDict = {
 }
 
 # Core dict contains paths to folders, dtype used in model, device etc.
-model_stem = f"Model_NoCheckerboard/Epochs_{HyperparametersDict['args']['num_epochs']}_1_2_VGG600epochs_baseline"
+model_stem = f"Model_NoCheckerboard/Epochs_{HyperparametersDict['args']['num_epochs']}_1_2_VGG600epochs_baseline_noBN"
 CoreDict = {
-    "run_training": False,
-    "load_model": True,
+    "run_training": True,
+    "load_model": False,
     "device": CurrentDevice,
     "dtype": torch.float32,
-    "model_save_path": GetTrainingsPath(
-        stem=model_stem
-    ),  # maybe use partial here
-    "model_load_path": GetTrainingsPath(
-        stem=model_stem
-    ),
-    "model_inference_path": GetInferencePath(
-        stem=model_stem
-    ),
-    "cached_ds":False
+    "model_save_path": GetTrainingsPath(stem=model_stem),  # maybe use partial here
+    "model_load_path": GetTrainingsPath(stem=model_stem),
+    "model_inference_path": GetInferencePath(stem=model_stem),
+    "cached_ds": False,
 }
 
 TrainDatasetDict = {
@@ -71,9 +65,9 @@ TrainDatasetDict = {
         "ds_root_path": Path("F:/MASTERS/UE4/DATASET/"),
         "ue_projects_list": ["SubwaySequencer_4_26_2", "Rainforest_Scene_4_26_2"],
         "crop_coords": (900, 1028, 500, 628),
-        #"crop_coords": (900, 964, 500, 564),
+        # "crop_coords": (900, 964, 500, 564),
         "transforms": None,
-        "cached": CoreDict['cached_ds'],
+        "cached": CoreDict["cached_ds"],
     },
 }
 
@@ -88,9 +82,9 @@ ValidDatasetDict = {
             "F:/MASTERS/UE4/DATASET/InfiltratorDemo_4_26_2/DumpedBuffers/info_Native.csv"
         ),
         "crop_coords": (900, 1028, 500, 628),
-        #"crop_coords": (900, 964, 500, 564),
+        # "crop_coords": (900, 964, 500, 564),
         "transforms": None,
-        "cached": CoreDict['cached_ds'],
+        "cached": CoreDict["cached_ds"],
     },
 }
 

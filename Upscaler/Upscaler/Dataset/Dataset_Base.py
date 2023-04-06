@@ -4,7 +4,7 @@ import torchvision.transforms
 import pandas as pd
 
 
-from Config.Config import TensorType, PathType
+from Config import TensorType, PathType
 from torch.utils.data import Dataset
 from typing import Optional
 from abc import ABCMeta, abstractmethod

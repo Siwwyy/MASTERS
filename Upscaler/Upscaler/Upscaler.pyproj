@@ -94,6 +94,9 @@
     <Compile Include="NeuralNetworks\__init__.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="setup.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Training_Pipeline.py">
       <SubType>Code</SubType>
     </Compile>
@@ -102,6 +105,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Utils\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="__init__.py">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
