@@ -46,7 +46,7 @@ HyperparametersDict = {
 }
 
 # Core dict contains paths to folders, dtype used in model, device etc.
-model_stem = f"Model_NoCheckerboard/Epochs_{HyperparametersDict['args']['num_epochs']}_1_2_VGG600epochs_baseline_noBN"
+model_stem = f"Model_NoCheckerboard/Epochs_{HyperparametersDict['args']['num_epochs']}_1_2_VGG600epochs_baseline_noBN_F16x32x32x64"
 CoreDict = {
     "run_training": True,
     "load_model": False,
