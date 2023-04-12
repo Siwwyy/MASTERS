@@ -46,7 +46,7 @@ HyperparametersDict = {
 }
 
 # Core dict contains paths to folders, dtype used in model, device etc.
-model_stem = f"Model_NoCheckerboard/Epochs_{HyperparametersDict['args']['num_epochs']}_1_2_VGG600epochs_baseline_noBN_F16x32x32x64"
+model_stem = f"Model_NoCheckerboard/Epochs_{HyperparametersDict['args']['num_epochs']}_1_2_VGG600epochs_baseline_noBN_WD"
 CoreDict = {
     "run_training": True,
     "load_model": False,
@@ -55,7 +55,7 @@ CoreDict = {
     "model_save_path": GetTrainingsPath(stem=model_stem),  # maybe use partial here
     "model_load_path": GetTrainingsPath(stem=model_stem),
     "model_inference_path": GetInferencePath(stem=model_stem),
-    "cached_ds": False,
+    "cached_ds": True,
 }
 
 TrainDatasetDict = {
@@ -129,7 +129,7 @@ CriterionDict = {
 
 OptimizerDict = {
     "className": optim.AdamW,
-    "args": {"params": None, "lr": HyperparametersDict["args"]["learning_rate"]},
+    "args": {"params": None, "lr": HyperparametersDict["args"]["learning_rate"], "weight_decay": 1e-4},
 }
 
 """ 

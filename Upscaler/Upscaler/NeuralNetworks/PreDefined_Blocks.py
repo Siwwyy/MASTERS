@@ -137,7 +137,7 @@ class UpscaleBlock(nn.Module):
         self,
         in_channels: int,
         out_channels: int,
-        scale_factor: int = 2,
+        scale_factor: Tuple[float, float] = (2.0, 2.0),
         mode: str = "nearest",
     ):
         super().__init__()
