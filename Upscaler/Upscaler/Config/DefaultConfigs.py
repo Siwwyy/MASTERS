@@ -1,5 +1,6 @@
 from Losses.Loss_Combined import Loss_Combined
 from Losses.Loss_MAE import Loss_MAE
+from Losses.Loss_MSE import Loss_MSE
 from Losses.PerceptualLosses.PerceptualLoss_VGG import PerceptualLoss_VGG
 from NeuralNetworks.NN_Base import Model_Base
 from NeuralNetworks.UNet import Model_UNET
@@ -46,7 +47,7 @@ HyperparametersDict = {
 }
 
 # Core dict contains paths to folders, dtype used in model, device etc.
-model_stem = f"Model_NoCheckerboard/Epochs_{HyperparametersDict['args']['num_epochs']}_1_2_VGG600epochs_baseline_noBN_WD"
+model_stem = f"Model_NoCheckerboard/Epochs_{HyperparametersDict['args']['num_epochs']}_1_2_VGG600epochs_baseline_noBNL1VGG"
 CoreDict = {
     "run_training": True,
     "load_model": False,
@@ -55,7 +56,7 @@ CoreDict = {
     "model_save_path": GetTrainingsPath(stem=model_stem),  # maybe use partial here
     "model_load_path": GetTrainingsPath(stem=model_stem),
     "model_inference_path": GetInferencePath(stem=model_stem),
-    "cached_ds": True,
+    "cached_ds": False,
 }
 
 TrainDatasetDict = {
@@ -122,14 +123,14 @@ CriterionDict = {
     "className": Loss_Combined,
     "args": {
         "criterions": [Loss_MAE(), PerceptualLoss_VGG()],
-        "criterionContribution": [1.0, 2.0],
+        "criterionContribution": [1.0, 1.0],
         "device": CurrentDevice,
     },
 }
 
 OptimizerDict = {
     "className": optim.AdamW,
-    "args": {"params": None, "lr": HyperparametersDict["args"]["learning_rate"], "weight_decay": 1e-4},
+    "args": {"params": None, "lr": HyperparametersDict["args"]["learning_rate"]},
 }
 
 """ 
@@ -192,16 +193,16 @@ class ConfigMapping(dict):
 
 
 # Initialize config
-config = ConfigMapping(CoreDict)
-config["hyperparameters"] = HyperparametersDict
-config["trainDS"] = TrainDatasetDict
-config["validDS"] = ValidDatasetDict
-config["trainDL"] = TrainDataloaderDict
-config["validDL"] = ValidDataloaderDict
-config["model"] = ModelDict
-config["criterion"] = CriterionDict
-config["optimizer"] = OptimizerDict
-print(config)
+#config = ConfigMapping(CoreDict)
+#config["hyperparameters"] = HyperparametersDict
+#config["trainDS"] = TrainDatasetDict
+#config["validDS"] = ValidDatasetDict
+#config["trainDL"] = TrainDataloaderDict
+#config["validDL"] = ValidDataloaderDict
+#config["model"] = ModelDict
+#config["criterion"] = CriterionDict
+#config["optimizer"] = OptimizerDict
+#print(config)
 
 
 def initObjectFromConfig(className: type, *args, **kwargs):

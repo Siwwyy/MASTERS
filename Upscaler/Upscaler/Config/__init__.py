@@ -16,7 +16,6 @@ from Config.DefaultConfigs import (
     ModelHyperparameters,
     HyperparametersDict,
     ConfigMapping,
-    config,
     initObjectFromConfig,
 )
 
