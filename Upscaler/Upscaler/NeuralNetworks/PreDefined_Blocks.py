@@ -8,7 +8,6 @@ from Config.Config import TensorType, ShapeType
 from typing import Optional, Tuple
 
 
-
 # UNET Based pre-defined blocks
 class DoubleConv(nn.Module):
     """
@@ -27,19 +26,18 @@ class DoubleConv(nn.Module):
         super().__init__()
         self.conv = nn.Sequential(
             nn.Conv2d(in_channels, out_channels, 3, 1, 1, bias=False),
-            nn.BatchNorm2d(out_channels),
+            # nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True),
             nn.Conv2d(out_channels, out_channels, 3, 1, 1, bias=False),
-            nn.BatchNorm2d(out_channels),
+            # nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True),
         )
 
-        
-        #def init_weights(conv):
+        # def init_weights(conv):
         #    if isinstance(conv, nn.Conv2d):
         #        torch.nn.init.kaiming_normal_(conv.weight)
 
-        #self.conv.apply(init_weights)
+        # self.conv.apply(init_weights)
 
     def forward(self, x: TensorType = None) -> TensorType:
         assert x is not None, "Input tensor X can't be None!"
@@ -139,7 +137,7 @@ class UpscaleBlock(nn.Module):
         self,
         in_channels: int,
         out_channels: int,
-        scale_factor: int = 2,
+        scale_factor: Tuple[float, float] = (2.0, 2.0),
         mode: str = "nearest",
     ):
         super().__init__()

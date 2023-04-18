@@ -12,7 +12,7 @@ from torchvision import transforms
 from torchvision.models import vgg16, vgg19
 
 
-#class VGG19(nn.Module):
+# class VGG19(nn.Module):
 #    def __init__(self):
 #        super().__init__()
 
@@ -57,8 +57,7 @@ from torchvision.models import vgg16, vgg19
 
 class PerceptualLoss_VGG(Loss_Base):
 
-
-    models = {'vgg16': vgg16, 'vgg19': vgg19}
+    models = {"vgg16": vgg16, "vgg19": vgg19}
 
     def __init__(
         self,
@@ -93,10 +92,10 @@ class PerceptualLoss_VGG(Loss_Base):
         modelFeatures = vggModel.features
 
         # Assign features (specified layers) from VGG19 to self
-        #self.model = torch.nn.ModuleList(
+        # self.model = torch.nn.ModuleList(
         #    [modelFeatures[slice] for slice in blocksSlice]
-        #)
-        #self.model = torch.nn.ModuleList(modelFeatures[blocksSlice[0]])
+        # )
+        # self.model = torch.nn.ModuleList(modelFeatures[blocksSlice[0]])
         self.model = nn.Sequential(modelFeatures[blocksSlice[0]])
 
         # Turn off requires_grad for parameters in VGG19 blocks
@@ -109,26 +108,23 @@ class PerceptualLoss_VGG(Loss_Base):
         assert srPred is not None, "Input tensor pred can't be None!"
         assert hrTarget is not None, "Input tensor target can't be None!"
 
-        #srPred = self.model(srPred)
-        #hrTarget = self.model(hrTarget)
+        # srPred = self.model(srPred)
+        # hrTarget = self.model(hrTarget)
 
         srPred = self.model(self.normalize(srPred))
         hrTarget = self.model(self.normalize(hrTarget))
         return self.criterion(srPred, hrTarget)
 
-        #loss = torch.tensor(
+        # loss = torch.tensor(
         #    [0.0], dtype=torch.float32, device=srPred.device, requires_grad=True
-        #)  # loss will not work if reduction != mean
-        #for feature in self.model:
+        # )  # loss will not work if reduction != mean
+        # for feature in self.model:
         #    #if idx == 3: break #lets calculate vgg loss on first 3 layers (no available GPU Memory for deeper layers)
         #    srPred = feature(srPred)
         #    with torch.no_grad():
         #        hrTarget = feature(hrTarget.detach())
         #    loss = loss + self.criterion(srPred, hrTarget)
-        #return loss
-
-
-
+        # return loss
 
 
 def test():

@@ -1,6 +1,6 @@
 # Own imports
 from Config.Config import Path
-from Config.DefaultConfigs import config, configJSONSerializer
+from Config.DefaultConfigs import *
 from Dataset.Dataset_UE import Dataset_UE
 from Utils.Utils import save_model, load_model
 from Training_Pipeline import training_pipeline
@@ -9,6 +9,16 @@ from Training_Pipeline import training_pipeline
 # Training Time #
 #################
 
+config = ConfigMapping(CoreDict)
+config["hyperparameters"] = HyperparametersDict
+config["trainDS"] = TrainDatasetDict
+config["validDS"] = ValidDatasetDict
+config["trainDL"] = TrainDataloaderDict
+config["validDL"] = ValidDataloaderDict
+config["model"] = ModelDict
+config["criterion"] = CriterionDict
+config["optimizer"] = OptimizerDict
+print(config)
 
 from datetime import datetime
 

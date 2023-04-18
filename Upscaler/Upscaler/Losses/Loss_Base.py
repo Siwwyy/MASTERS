@@ -1,7 +1,7 @@
 import torch
 
 from abc import ABCMeta, abstractmethod
-from Config.Config import TensorType
+from Config import TensorType
 
 # from Config.config import TensorType
 

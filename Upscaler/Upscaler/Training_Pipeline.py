@@ -33,7 +33,7 @@ def save_checkpoint(
     epoch: int = 0,
     model: Model_Base = None,
     hyperparams: ModelHyperparameters = None,
-    optimizer: optim = None
+    optimizer: optim = None,
 ):
 
     model_save_path = model_save_path / (model_name + ".pth")
@@ -149,8 +149,8 @@ def training_pipeline(
             data = preprocessing_pipeline(data)
             target = preprocessing_pipeline(target)
 
-            #save_exr(str("F:/MASTERS/TEST/DATA/LDR/aadata_ldr_iter{}.exr".format(batch_idx * epoch + batch_idx)), data.squeeze(0).cpu().half())
-            #save_exr(str("F:/MASTERS/TEST/TARGET/LDR/aatarget_ldr_iter{}.exr".format(batch_idx * epoch + batch_idx)), target.squeeze(0).cpu().half())
+            # save_exr(str("F:/MASTERS/TEST/DATA/LDR/aadata_ldr_iter{}.exr".format(batch_idx * epoch + batch_idx)), data.squeeze(0).cpu().half())
+            # save_exr(str("F:/MASTERS/TEST/TARGET/LDR/aatarget_ldr_iter{}.exr".format(batch_idx * epoch + batch_idx)), target.squeeze(0).cpu().half())
 
             # forward
             pred = model(data)
@@ -204,7 +204,7 @@ def training_pipeline(
             save_checkpoint(
                 config["model_save_path"],
                 "model_float32_best",
-                #"model_float32_best_epoch{}".format(str(epoch)),
+                # "model_float32_best_epoch{}".format(str(epoch)),
                 epoch,
                 model,
                 hyperparams,

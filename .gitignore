@@ -483,4 +483,5 @@ DerivedDataCache/*
 EXR_Utils/*
 UE4/*
 !UE4/UE_DumpPass
+.ipynb_checkpoints
 
