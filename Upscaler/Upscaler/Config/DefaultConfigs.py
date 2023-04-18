@@ -193,16 +193,16 @@ class ConfigMapping(dict):
 
 
 # Initialize config
-#config = ConfigMapping(CoreDict)
-#config["hyperparameters"] = HyperparametersDict
-#config["trainDS"] = TrainDatasetDict
-#config["validDS"] = ValidDatasetDict
-#config["trainDL"] = TrainDataloaderDict
-#config["validDL"] = ValidDataloaderDict
-#config["model"] = ModelDict
-#config["criterion"] = CriterionDict
-#config["optimizer"] = OptimizerDict
-#print(config)
+# config = ConfigMapping(CoreDict)
+# config["hyperparameters"] = HyperparametersDict
+# config["trainDS"] = TrainDatasetDict
+# config["validDS"] = ValidDatasetDict
+# config["trainDL"] = TrainDataloaderDict
+# config["validDL"] = ValidDataloaderDict
+# config["model"] = ModelDict
+# config["criterion"] = CriterionDict
+# config["optimizer"] = OptimizerDict
+# print(config)
 
 
 def initObjectFromConfig(className: type, *args, **kwargs):

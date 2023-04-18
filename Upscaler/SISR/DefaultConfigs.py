@@ -191,6 +191,7 @@ class ConfigMapping(dict):
 
         return output_str
 
+
 def initObjectFromConfig(className: type, *args, **kwargs):
     """
     Initializes object from given config,
