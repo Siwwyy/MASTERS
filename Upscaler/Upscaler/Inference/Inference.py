@@ -79,9 +79,8 @@ def Inference_pipeline(
         )
         print("SSIM between pred ldr and GT ldr: ", ssim(pred_ldr.cpu(), hr.cpu()))
 
-    
     # Naive upscaling
-    upscale_nearest = torch.nn.Upsample(scale_factor=2, mode='nearest')
+    upscale_nearest = torch.nn.Upsample(scale_factor=2, mode="nearest")
     pred_hr_nearest = upscale_nearest(lr)
     pred_nearest_ldr = pred_hr_nearest.clone()
     pred_nearest_hdr = depreprocessing_pipeline(pred_hr_nearest)
@@ -90,17 +89,27 @@ def Inference_pipeline(
     save_exr(str(outputs_save_path / "hdr_GT.exr"), hr_clone.cpu().half())
     save_exr(str(outputs_save_path / "ldr_GT.exr"), hr.squeeze(0).cpu().half())
     save_exr(
-        str(outputs_save_path / "ldr_pred_naive.exr"), pred_nearest_ldr.squeeze(0).cpu().half()
+        str(outputs_save_path / "ldr_pred_naive.exr"),
+        pred_nearest_ldr.squeeze(0).cpu().half(),
     )
     save_exr(
-        str(outputs_save_path / "hdr_pred_naive.exr"), pred_nearest_hdr.squeeze(0).cpu().half()
+        str(outputs_save_path / "hdr_pred_naive.exr"),
+        pred_nearest_hdr.squeeze(0).cpu().half(),
     )
 
     # Print info about similaritiness and range of prediction, target
-    print("Pred naive min: ", torch.min(pred_nearest_ldr), "| Pred naive max: ", torch.max(pred_nearest_ldr))
+    print(
+        "Pred naive min: ",
+        torch.min(pred_nearest_ldr),
+        "| Pred naive max: ",
+        torch.max(pred_nearest_ldr),
+    )
     print("Target min: ", torch.min(hr), "| Target max: ", torch.max(hr))
     print(
         "SSIM between pred naive hdr and GT hdr: ",
         ssim(pred_nearest_hdr.cpu(), hr_clone.unsqueeze(0).cpu()),
     )
-    print("SSIM between pred naive ldr and GT ldr: ", ssim(pred_nearest_ldr.cpu(), hr.cpu()))
+    print(
+        "SSIM between pred naive ldr and GT ldr: ",
+        ssim(pred_nearest_ldr.cpu(), hr.cpu()),
+    )

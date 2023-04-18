@@ -1,4 +1,4 @@
-from Config import PathType, DictType
+from .Config import PathType, DictType
 from omegaconf import OmegaConf
 
 
