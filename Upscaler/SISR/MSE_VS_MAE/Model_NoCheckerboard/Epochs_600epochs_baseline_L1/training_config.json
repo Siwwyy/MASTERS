@@ -1,0 +1,58 @@
+run_training:                 True 
+load_model:                   False 
+device:                       cuda:0 
+dtype:                        torch.float32 
+model_save_path:              F:\MASTERS\Upscaler\Results\2023-04-13\Trainings\Model_NoCheckerboard\Epochs_600_1_2_VGG600epochs_baseline_L1 
+model_load_path:              F:\MASTERS\Upscaler\Results\2023-04-13\Trainings\Model_NoCheckerboard\Epochs_600_1_2_VGG600epochs_baseline_L1 
+model_inference_path:         F:\MASTERS\Upscaler\Results\2023-04-13\Inference\Model_NoCheckerboard\Epochs_600_1_2_VGG600epochs_baseline_L1 
+cached_ds:                    True 
+hyperparameters 
+  ClassName:                  ModelHyperparameters 
+  in_channels:                3 
+  out_channels:               3 
+  learning_rate:              0.0001 
+  batch_size:                 32 
+  num_epochs:                 600 
+trainDS 
+  ClassName:                  FullDataset_UE 
+  name:                       FullDataset_UE 
+  ds_root_path:               F:\MASTERS\UE4\DATASET 
+  ue_projects_list:           ['SubwaySequencer_4_26_2', 'Rainforest_Scene_4_26_2'] 
+  crop_coords:                (900, 1028, 500, 628) 
+  transforms:                 None 
+  cached:                     True 
+validDS 
+  ClassName:                  Dataset_UE 
+  name:                       Dataset_UE 
+  ds_root_path:               F:\MASTERS\UE4\DATASET\InfiltratorDemo_4_26_2\DumpedBuffers 
+  csv_root_path:              F:\MASTERS\UE4\DATASET\InfiltratorDemo_4_26_2\DumpedBuffers\info_Native.csv 
+  crop_coords:                (900, 1028, 500, 628) 
+  transforms:                 None 
+  cached:                     True 
+trainDL 
+  ClassName:                  DataLoader 
+  dataset:                    None 
+  batch_size:                 32 
+  shuffle:                    True 
+  drop_last:                  True 
+  pin_memory:                 True 
+validDL 
+  ClassName:                  DataLoader 
+  dataset:                    None 
+  batch_size:                 32 
+  shuffle:                    True 
+  drop_last:                  True 
+  pin_memory:                 True 
+model 
+  ClassName:                  Model_NoCheckerboard 
+  in_channels:                3 
+  out_channels:               3 
+criterion 
+  ClassName:                  Loss_Combined 
+  criterions:                 [Loss_MAE] 
+  criterionContribution:      [1.0] 
+  device:                     cuda:0 
+optimizer 
+  ClassName:                  AdamW 
+  params:                     None 
+  lr:                         0.0001 
