@@ -91,10 +91,10 @@ class UpsampleBlock(nn.Module):
     ----------
     """
 
-    def __init__(self, in_channels: int, out_channels: int):
+    def __init__(self, in_channels: int, out_channels: int, abc: int):
         super().__init__()
         self.conv_transpose2d = nn.ConvTranspose2d(
-            in_channels, out_channels, kernel_size=2, stride=2
+            abc, abc, kernel_size=2, stride=2
         )
         self.conv = DoubleConv(in_channels, out_channels)
 

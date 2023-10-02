@@ -140,7 +140,8 @@ class Model_UNET(Model_Base):
         self.out_channels = out_channels
 
         # Amout of conv features per layer
-        conv_features = np.array([64, 128, 256, 512], dtype=np.int32)
+        #conv_features = np.array([64, 128, 256, 512], dtype=np.int32)
+        conv_features = np.array([16, 32, 64, 128], dtype=np.int32)
 
         # Skip connections
         self.skip_connections = [

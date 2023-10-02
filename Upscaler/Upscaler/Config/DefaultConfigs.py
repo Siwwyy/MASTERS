@@ -42,12 +42,15 @@ HyperparametersDict = {
         "out_channels": 3,
         "learning_rate": 0.0001,
         "batch_size": 32,
-        "num_epochs": 400,
+        "num_epochs": 600,
     },
 }
 
 # Core dict contains paths to folders, dtype used in model, device etc.
-model_stem = f"Model_NoCheckerboard/Epochs_{HyperparametersDict['args']['num_epochs']}_1_2_VGG600epochs_baseline_L1400Epochs"
+#model_stem = f"Model_NoCheckerboard/Epochs_{HyperparametersDict['args']['num_epochs']}_1_2_VGG600epochs_baseline_L1400Epochs"
+#model_stem = f"Model_UNET/Epochs_{HyperparametersDict['args']['num_epochs']}_L1_SmallerChannels"
+#model_stem = f"Model_UNET/Epochs_{HyperparametersDict['args']['num_epochs']}_L1"
+model_stem = f"Model_NoCheckerboard/Epochs_{HyperparametersDict['args']['num_epochs']}_L1_VGG"
 CoreDict = {
     "run_training": True,
     "load_model": False,
@@ -119,11 +122,16 @@ ModelDict = {
     },
 }
 
+#CriterionDict = {
+#    "className": Loss_MSE,
+#    "args": {},
+#}
+
 CriterionDict = {
     "className": Loss_Combined,
     "args": {
-        "criterions": [Loss_MAE()],
-        "criterionContribution": [1.0],
+        "criterions": [Loss_MAE(), PerceptualLoss_VGG()],
+        "criterionContribution": [1.0, 2.0],
         "device": CurrentDevice,
     },
 }

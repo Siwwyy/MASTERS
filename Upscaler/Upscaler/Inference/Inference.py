@@ -1,13 +1,24 @@
-from typing import Dict, Union
-from pathlib import Path
-from Config.Config import PathType, CurrentDevice
-from NeuralNetworks.NN_Base import Model_Base
-from Dataset.Dataset_Base import Dataset_Base
-from Dataset.Dataset_UE import save_exr
-from Colorspace.PreProcessing import preprocessing_pipeline, depreprocessing_pipeline
-from torchmetrics import StructuralSimilarityIndexMeasure
-
+from typing                                 import Dict, Union
+from pathlib                                import Path
+from Config.Config                          import PathType, CurrentDevice
+from NeuralNetworks.NN_Base                 import Model_Base
+from Dataset.Dataset_Base                   import Dataset_Base
+from Dataset.Dataset_UE                     import save_exr
+from Losses.Loss_MSE                        import Loss_MSE
+from Colorspace.PreProcessing               import preprocessing_pipeline, depreprocessing_pipeline
+from torchmetrics                           import StructuralSimilarityIndexMeasure, PeakSignalNoiseRatio
 import torch
+
+
+
+def PSNR(pred:torch.tensor, target:torch.tensor) -> float:
+
+    #maxL = torch.tensor(pred.max().item(), dtype=torch.float32).to(pred)
+    #mseLoss = Loss_MSE()
+    #mseLossValue = mseLoss(pred, target)
+    #PSNRValue = 20.0 * torch.log10(maxL) - 10.0 * torch.log10(mseLossValue)
+    psnr = PeakSignalNoiseRatio()
+    return psnr(pred, target)
 
 
 def Inference_pipeline(
@@ -51,7 +62,7 @@ def Inference_pipeline(
     with torch.no_grad():
 
         # Model
-        pred_hr = model(lr)  # get prediction
+        pred_hr  = model(lr)  # get prediction
         pred_ldr = pred_hr.clone()
         pred_hdr = depreprocessing_pipeline(pred_hr)
 
@@ -78,6 +89,7 @@ def Inference_pipeline(
             ssim(pred_hdr.cpu(), hr_clone.unsqueeze(0).cpu()),
         )
         print("SSIM between pred ldr and GT ldr: ", ssim(pred_ldr.cpu(), hr.cpu()))
+        print("PSNR between pred ldr and GT ldr: ", PSNR(pred_ldr.cpu(), hr.cpu()))
 
     # Naive upscaling
     upscale_nearest = torch.nn.Upsample(scale_factor=2, mode="nearest")
@@ -113,3 +125,5 @@ def Inference_pipeline(
         "SSIM between pred naive ldr and GT ldr: ",
         ssim(pred_nearest_ldr.cpu(), hr.cpu()),
     )
+
+    print("PSNR between pred naive ldr and GT ldr: ", PSNR(pred_nearest_ldr.cpu(), hr.cpu()))

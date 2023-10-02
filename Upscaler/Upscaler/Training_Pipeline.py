@@ -115,7 +115,7 @@ def training_pipeline(
 
     # Load checkpoint
     if model_load:
-        loaded_training_state_dict = load_model(config["model_load_path"])
+        loaded_training_state_dict = load_model(config["model_load_path"]/"model_float32_final.pth")
         model.load_state_dict(loaded_training_state_dict["model_state_dict"])
         optimizer.load_state_dict(loaded_training_state_dict["optimizer_state_dict"])
 

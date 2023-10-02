@@ -74,6 +74,7 @@ def GetResultsPath(directory: PathType = None, stem: PathType = date.today()) ->
 
 
 ResultsPath = GetResultsPath()
+#ResultsPath = Path("F:/MASTERS/Upscaler/Results/2023-05-17")
 
 
 def GetTrainingsPath(
