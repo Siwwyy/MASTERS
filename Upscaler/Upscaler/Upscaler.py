@@ -5,9 +5,9 @@ from Dataset.Dataset_UE import Dataset_UE
 from Utils.Utils import save_model, load_model
 from Training_Pipeline import training_pipeline
 
-#################
-# Training Time #
-#################
+##################
+## Training Time #
+##################
 
 config = ConfigMapping(CoreDict)
 config["hyperparameters"] = HyperparametersDict
@@ -71,6 +71,38 @@ Inference_pipeline(
     device=config["device"],
 )
 
+# from Dataset.Dataset_UE import load_exr_file, save_exr
+# import torch.nn.functional as F
+
+# exrfile = load_exr_file("F:/MASTERS/UE4/DATASET/InfiltratorDemo_4_26_2/DumpedBuffers/1920x1080-native/SceneColor/81.exr").float()
+# print(exrfile)
+
+# Gxy = torch.tensor([
+#    [
+#        [1, 0, -1],
+#        [2, 0, -2],
+#        [1, 0, -1]
+#    ],
+#    [
+#        [1, 2, 1],
+#        [0, 0, 0],
+#        [-1, -2, -1]
+#    ]
+#    ]).to(exrfile)
+
+# Gy = torch.tensor([
+#    [1, 2, 1],
+#    [0, 0, 0],
+#    [-1, -2, -1]
+#    ]).to(exrfile)
+## Gx = Gx.unsqueeze(0)
+### Gy = Gy.unsqueeze(0)
+##Gy = Gy.expand(1,3,3,3)
+
+##Gxy = Gxy.unsqueeze(-1).expand(2,3,3,3)
+# resultX = F.conv2d(exrfile, Gxy[None, None,...], stride=1, padding=1)
+
+# save_exr("F:/MASTERS/test.exr", resultX.clip(min=-5, max=10.0), channels=['R', 'G'])
 
 if __name__ == "__main__":
     print("UPSCALER!")

@@ -48,7 +48,7 @@ class IdentityTransform(object):
         return f"{self.__class__.__name__}()"
 
 
-class Dataset_Base(torch.utils.data.Dataset, metaclass=ABCMeta):
+class DatasetBase(torch.utils.data.Dataset, metaclass=ABCMeta):
     """
     Dataset Base abstract class
 
@@ -63,24 +63,13 @@ class Dataset_Base(torch.utils.data.Dataset, metaclass=ABCMeta):
 
     def __init__(
         self,
-        name: str = "Dataset_Base",
-        ds_root_path: PathType = None,
-        csv_root_path: Optional[PathType] = None,
+        datasetRootPath: PathType = None,
         transforms: Optional[torchvision.transforms.Compose] = None,
     ):
-        assert ds_root_path is not None, "ds_root_path cant be None!"
+        assert datasetRootPath is not None, "ds_root_path cant be None!"
         super().__init__()
 
-        self.name = name
-        self.ds_root_path = ds_root_path
-
-        # Load csv file if path is specified
-        if csv_root_path is not None:
-            self.csv_file = pd.read_csv(
-                csv_root_path, names=("Frame Idx", "Frame name"), index_col=False
-            )
-            self.dataset_size = len(self.csv_file)
-            # self.csv_file = pd.read_csv(csv_root_path, index_col=False)
+        self.datasetRootPath = datasetRootPath
 
         # if tranforms has been not specified, then use Identity transform
         # x == id(x)

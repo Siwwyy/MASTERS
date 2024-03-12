@@ -89,6 +89,7 @@
     <Compile Include="NeuralNetworks\PreDefined_Blocks.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="NeuralNetworks\KPN.py" />
     <Compile Include="NeuralNetworks\UNet.py">
       <SubType>Code</SubType>
     </Compile>
