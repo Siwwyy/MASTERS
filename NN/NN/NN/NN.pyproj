@@ -11,6 +11,7 @@
     <OutputPath>.</OutputPath>
     <Name>NN</Name>
     <RootNamespace>NN</RootNamespace>
+    <InterpreterId>CondaEnv|CondaEnv|PytorchSource</InterpreterId>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -21,7 +22,11 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Config\Config.py" />
+    <Compile Include="Config\BaseTypes.py" />
+    <Compile Include="Config\ConfigEngine\LoadConfig.py" />
+    <Compile Include="Config\ConfigEngine\__init__.py" />
+    <Compile Include="Config\ConfigUtils\ConfigUtils.py" />
+    <Compile Include="Config\ConfigUtils\__init__.py" />
     <Compile Include="Config\__init__.py" />
     <Compile Include="CustomKernels\Kernels\AddKernel\jit.py" />
     <Compile Include="CustomKernels\Kernels\AddKernel\__init__.py" />
@@ -35,6 +40,9 @@
     <Compile Include="TrainingPipeline\TrainingPipeline.py" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Config\ConfigEngine\" />
+    <Folder Include="Config\ConfigFiles\" />
+    <Folder Include="Config\ConfigUtils\" />
     <Folder Include="CustomKernels\Kernels\AddKernel\" />
     <Folder Include="CustomKernels\Kernels\" />
     <Folder Include="CustomKernels\Tests\" />
@@ -45,8 +53,12 @@
     <Folder Include="TrainingPipeline\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Config\ConfigFiles\config.yaml" />
     <Content Include="CustomKernels\Kernels\AddKernel\addKernel_cuda_kernel.cu" />
     <Content Include="CustomKernels\Kernels\AddKernel\addKernel_cuda.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="CondaEnv|CondaEnv|PytorchSource" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
