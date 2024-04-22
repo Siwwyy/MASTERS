@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>3cb52152-466e-4349-893e-1b22633ae863</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>NN.py</StartupFile>
+    <StartupFile>Dataset\DatasetBase.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -25,14 +25,14 @@
     <Compile Include="Config\BaseTypes.py" />
     <Compile Include="Config\ConfigEngine\LoadConfig.py" />
     <Compile Include="Config\ConfigEngine\__init__.py" />
-    <Compile Include="Config\ConfigUtils\ConfigUtils.py" />
+    <Compile Include="Config\ConfigUtils\Utils.py" />
     <Compile Include="Config\ConfigUtils\__init__.py" />
     <Compile Include="Config\__init__.py" />
     <Compile Include="CustomKernels\Kernels\AddKernel\jit.py" />
     <Compile Include="CustomKernels\Kernels\AddKernel\__init__.py" />
     <Compile Include="CustomKernels\setup.py" />
-    <Compile Include="Dataset\Dataset_Base.py" />
-    <Compile Include="Dataset\Dataset_UE.py" />
+    <Compile Include="Dataset\DatasetBase.py" />
+    <Compile Include="Dataset\DatasetUE.py" />
     <Compile Include="Dataset\__init__.py" />
     <Compile Include="NeuralNetworkArchitectures\NN_Base.py" />
     <Compile Include="NeuralNetworkArchitectures\__init__.py" />
@@ -42,6 +42,10 @@
   <ItemGroup>
     <Folder Include="Config\ConfigEngine\" />
     <Folder Include="Config\ConfigFiles\" />
+    <Folder Include="Config\ConfigFiles\Dataset\" />
+    <Folder Include="Config\ConfigFiles\Loss\" />
+    <Folder Include="Config\ConfigFiles\Model\" />
+    <Folder Include="Config\ConfigFiles\Optimizer\" />
     <Folder Include="Config\ConfigUtils\" />
     <Folder Include="CustomKernels\Kernels\AddKernel\" />
     <Folder Include="CustomKernels\Kernels\" />
@@ -54,11 +58,14 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Config\ConfigFiles\config.yaml" />
+    <Content Include="Config\ConfigFiles\Dataset\UE.yaml" />
+    <Content Include="Config\ConfigFiles\Loss\MSE.yaml" />
     <Content Include="CustomKernels\Kernels\AddKernel\addKernel_cuda_kernel.cu" />
     <Content Include="CustomKernels\Kernels\AddKernel\addKernel_cuda.cpp" />
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="CondaEnv|CondaEnv|PytorchSource" />
+    <InterpreterReference Include="Global|VisualStudio|pytorch_env" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

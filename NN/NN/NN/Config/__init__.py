@@ -1,4 +1,4 @@
-from BaseTypes import *
+from .BaseTypes import *
 from .ConfigEngine import *
 from .ConfigUtils import *
 

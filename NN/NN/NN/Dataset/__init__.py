@@ -1,5 +1,5 @@
-from Dataset.Dataset_Base import Dataset_Base
-from Dataset.Dataset_UE import Dataset_UE
+from .DatasetBase import Dataset_Base
+from .DatasetUE import Dataset_UE
 
 __all__ = ["Dataset_Base", "Dataset_UE"]
 

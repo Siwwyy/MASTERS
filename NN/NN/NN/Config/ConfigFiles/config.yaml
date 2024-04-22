@@ -3,6 +3,12 @@
 #Main config, used for specifying rest of configuration file tree
 
 defaults:
-    - Defaults/a: Default_Description
-    - b: Default_Description
-    - c: Default_Description
+    - dataset: UE
+    # - model: Default_Description
+    - loss: MSE
+    # - optimizer: Default_Description
+  
+# dataset: UE
+# - model: Default_Description
+# - loss: Default_Description
+# - optimizer: Default_Description

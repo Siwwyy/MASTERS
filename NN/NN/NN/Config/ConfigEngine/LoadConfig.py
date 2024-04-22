@@ -1,6 +1,6 @@
-from omegaconf import DictConfig, OmegaConf
-
 import hydra
+
+from omegaconf import DictConfig, OmegaConf
 from hydra import compose, initialize
 
 
@@ -12,6 +12,8 @@ from hydra import compose, initialize
 @hydra.main(version_base=None, config_path="../ConfigFiles", config_name="config")
 def my_app(cfg: DictConfig) -> None:
     print(OmegaConf.to_yaml(cfg))
+
+    a = 10
 
 
 # def LoadConfigFile(configPath:str=None, configFileName:str=None):
