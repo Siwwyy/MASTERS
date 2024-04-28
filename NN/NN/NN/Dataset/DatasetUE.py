@@ -3,6 +3,8 @@ from Config import TensorType, PathType
 from typing import Optional, Tuple
 from collections import namedtuple
 
+import torchvision
+
 
 class DatasetUE(DatasetBase):
     """
@@ -14,21 +16,21 @@ class DatasetUE(DatasetBase):
         Name of dataset
     datasetRootPath : PathType  (str or Path)
         path to root folder of dataset
-    csvPath : Optional[PathType] (str of Path)
+    csvPath : PathType (str of Path)
         optional path to csv file, if not provided csvPath == datasetRootPath
-    cropCoords: Optional[Tuple[int, int, int, int]]
+    cropCoords: Tuple[int, int, int, int]
         x_min, y_min, x_max, y_max of the single crop, if not specified crop will be 64x64
-    transforms: Optional[torchvision.transforms.Compose]
-        optional composed torchvision's tranforms
+    transforms: torchvision.transforms.Compose
+        optional composed torchvision's tranforms, if not specified, transform == identity transform
     ----------
     """
 
     def __init__(
         self,
         datasetRootPath: PathType = None,
-        csvPath: Optional[PathType] = None,
-        cropCoords: Optional[Tuple[int, int, int, int]] = None,
-        transforms: Optional[torchvision.transforms.Compose] = None,
+        csvPath: PathType | None = None,
+        cropCoords: Tuple[int, int, int, int] | None = None,
+        transforms: torchvision.transforms.Compose | None = None,
     ):
         super().__init__(datasetRootPath, transforms)
         self.csvPath = csvPath if csvPath is not None else datasetRootPath

@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>3cb52152-466e-4349-893e-1b22633ae863</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>Dataset\DatasetBase.py</StartupFile>
+    <StartupFile>Dataloader\DataloaderUtils.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -31,8 +31,12 @@
     <Compile Include="CustomKernels\Kernels\AddKernel\jit.py" />
     <Compile Include="CustomKernels\Kernels\AddKernel\__init__.py" />
     <Compile Include="CustomKernels\setup.py" />
+    <Compile Include="Dataloader\DataloaderUtils.py" />
+    <Compile Include="Dataloader\__init__.py" />
     <Compile Include="Dataset\DatasetBase.py" />
     <Compile Include="Dataset\DatasetUE.py" />
+    <Compile Include="Dataset\Transforms\Transforms.py" />
+    <Compile Include="Dataset\Transforms\__init__.py" />
     <Compile Include="Dataset\__init__.py" />
     <Compile Include="NeuralNetworkArchitectures\NN_Base.py" />
     <Compile Include="NeuralNetworkArchitectures\__init__.py" />
@@ -51,9 +55,11 @@
     <Folder Include="CustomKernels\Kernels\" />
     <Folder Include="CustomKernels\Tests\" />
     <Folder Include="Dataset\" />
+    <Folder Include="Dataset\Transforms\" />
     <Folder Include="NeuralNetworkArchitectures\" />
     <Folder Include="Config\" />
     <Folder Include="CustomKernels\" />
+    <Folder Include="Dataloader\" />
     <Folder Include="TrainingPipeline\" />
   </ItemGroup>
   <ItemGroup>
