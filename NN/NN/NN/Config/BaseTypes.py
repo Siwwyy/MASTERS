@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Union, Annotated, Dict
+from typing import Union, Annotated
 from pathlib import Path
 from .ConfigUtils import try_gpu
 
@@ -30,7 +30,7 @@ PathType = Union[str, Path]
 """ 
     Possible Dict Type
 """
-DictType = Union[dict, Dict]
+DictType = dict
 
 """ 
     Currently used device

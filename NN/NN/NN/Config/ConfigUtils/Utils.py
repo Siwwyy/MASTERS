@@ -3,6 +3,7 @@ from pathlib import Path
 
 import torch
 
+# Please keep this list sorted
 __all__ = ["try_gpu"]
 
 
@@ -13,7 +14,7 @@ def try_gpu(gpu_idx: int = 0) -> torch.device:
     Parameters
     ----------
     gpu_idx : int
-        GPU Device idx, number of specified GPU
+        GPU Device idx, number of specified GPU, gpu_idx = 0 by default
     Returns
     -------
         function returns GPU on specified index if exists, if not, CPU."""

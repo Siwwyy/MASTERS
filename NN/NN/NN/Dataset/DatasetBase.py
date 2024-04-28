@@ -5,66 +5,28 @@ import pandas as pd
 
 
 from Config import TensorType, PathType
+from Transforms.Transforms import IdentityTransform
 from torch.utils.data import Dataset
-from typing import Optional
 from abc import ABCMeta, abstractmethod
 
 
-# TODO -> Move it maybe to separate file, which will contain only
-# transoform utils!
-class IdentityTransform(object):
-    """
-    Identity transform
-
-    tens = IdentityTransform(tens1)
-    tens == tens1
-
-    Attributes
-    ----------
-    name : str
-        Name of dataset
-    ds_root_path : PathType (Union[str, Path])
-        Root path to dataset
-    ----------
-    """
-
-    def __init__(self):
-        pass
-
-    def __call__(self, tens: TensorType = None):
-        """
-        Parameters
-        ----------
-        tens : TensorType (Pytorch tensor)
-            Input pytorch's tensor with arbitrary shape.
-        Returns
-        ---------
-        Pytorch's tensor, identity of input!
-        """
-        assert tens is not None, "Input tens cant be none!"
-        return tens
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}()"
-
-
 class DatasetBase(torch.utils.data.Dataset, metaclass=ABCMeta):
-    """
+    r"""
     Dataset Base abstract class
 
     Attributes
     ----------
     datasetRootPath : PathType (Union[str, Path])
         Root path to dataset
-    transforms: Optional[torchvision.transforms.Compose]
-        optional composed torchvision's tranforms
+    transforms: torchvision.transforms.Compose
+        optional composed torchvision's tranforms, if not specified, transform == identity transform
     ----------
     """
 
     def __init__(
         self,
         datasetRootPath: PathType = None,
-        transforms: Optional[torchvision.transforms.Compose] = None,
+        transforms: torchvision.transforms.Compose | None = None,
     ):
         assert datasetRootPath is not None, "Dataset root path can't be None!"
         super().__init__()
