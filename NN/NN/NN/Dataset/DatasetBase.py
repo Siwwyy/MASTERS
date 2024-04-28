@@ -7,7 +7,6 @@ import pandas as pd
 from Config import TensorType, PathType
 from Transforms.Transforms import IdentityTransform
 from torch.utils.data import Dataset
-from typing import Optional
 from abc import ABCMeta, abstractmethod
 
 

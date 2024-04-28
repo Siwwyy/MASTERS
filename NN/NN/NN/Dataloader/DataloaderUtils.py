@@ -1,11 +1,10 @@
 # EXR Utils (EXR is a base input format for this project)
-from dataclasses import dataclass
 import OpenEXR
 import Imath
 import torch
 import numpy as np
 
-from typing import Tuple, List
+from dataclasses import dataclass
 from Config import TensorType, PathType
 
 # Utility dataclasses for encapsulating data types for libs used in project
@@ -27,7 +26,7 @@ class TensorDataTypeFP16:
     openEXR = Imath.PixelType(Imath.PixelType.HALF)
 
 
-def loadEXR(absolutePath: str, channels: List[str] | None = None) -> TensorType:
+def loadEXR(absolutePath: str, channels: list[str] | None = None) -> TensorType:
     r"""
     Loading exr files
 
@@ -35,7 +34,7 @@ def loadEXR(absolutePath: str, channels: List[str] | None = None) -> TensorType:
     ----------
     absolutePath : str
         absolute path to .exr file
-    channels: Optional[List[str]] (default is None)
+    channels: list[str] (default is ["R", "G", "B"])
         channels to read, e.g., channels=["R", "G", "B"], channels=["R"] etc.
 
     Returns
@@ -75,7 +74,7 @@ def loadEXR(absolutePath: str, channels: List[str] | None = None) -> TensorType:
 
 
 def saveEXR(
-    absolutePath: str, tensor: TensorType = None, channels: List[str] | None = None
+    absolutePath: str, tensor: TensorType = None, channels: list[str] | None = None
 ):
     r"""
     Saving PyTorch tensor with .exr format
@@ -87,7 +86,7 @@ def saveEXR(
         absolute path to .exr file
     tensor: TensorType (torch.tensor)
         CHW shaped pytorch tensor
-    channels: Optional[List[str]] (default is None)
+    channels: List[str] (default is ["R", "G", "B"])
         channels to read, e.g., channels=["R", "G", "B"], channels=["R"] etc.
     """
     assert tensor is not None, "Tensor can't be None!"
