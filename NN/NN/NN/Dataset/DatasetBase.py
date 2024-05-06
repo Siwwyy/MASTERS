@@ -5,7 +5,7 @@ import pandas as pd
 
 
 from Config import TensorType, PathType
-from Transforms.Transforms import IdentityTransform
+from .Transforms import IdentityTransform
 from torch.utils.data import Dataset
 from abc import ABCMeta, abstractmethod
 
@@ -32,6 +32,7 @@ class DatasetBase(torch.utils.data.Dataset, metaclass=ABCMeta):
         super().__init__()
 
         self.datasetRootPath = datasetRootPath
+        self.datasetSize = 0
 
         # if tranforms has been not specified, then use Identity transform
         # x == id(x)
