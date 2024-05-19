@@ -1,4 +1,4 @@
-from .DatasetBase import DatasetBase
+from Dataset.DatasetBase import DatasetBase
 from Config import TensorType, PathType
 from collections import namedtuple
 

@@ -1,5 +1,4 @@
 from .BaseTypes import *
-from .ConfigEngine import *
 from .ConfigUtils import *
 
 __all__ = ["Config", "ConfigEngine", "ConfigUtils"]

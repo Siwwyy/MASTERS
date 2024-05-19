@@ -12,6 +12,7 @@ __all__ = ["TensorType", "ShapeType", "PathType", "DictType", "CurrentDevice"]
 # ShapeType = Annotated[Union[tuple, torch.Size], "Possible Shape types of the
 # tensor"]
 
+# After Python 3.12, "TensorType = torch.tensor" can be "type TensorType = torch.tensor" etc.
 """ 
     Possible Tensor type
 """
@@ -36,3 +37,20 @@ DictType = dict
     Currently used device
 """
 CurrentDevice: torch.device = try_gpu(gpu_idx=0)
+
+""" 
+    Meta class of every class in NN library
+"""
+
+
+class _NNMetaClass(type):
+    ...
+
+
+""" 
+    Base class of every class in NN library
+"""
+
+
+class _NNBaseClass(torch.nn.Module, metaclass=_NNMetaClass):
+    ...

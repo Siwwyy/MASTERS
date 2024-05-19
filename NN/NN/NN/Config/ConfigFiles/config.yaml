@@ -3,12 +3,16 @@
 #Main config, used for specifying rest of configuration file tree
 
 defaults:
-    - dataset: UE
+    - dataset: DatasetUE
     # - model: Default_Description
     - loss: MSE
     # - optimizer: Default_Description
+    # - _self_ -> by default, if not specified, self is added at the end of defaults: config
   
 # dataset: UE
 # - model: Default_Description
 # - loss: Default_Description
 # - optimizer: Default_Description
+
+# loss:
+#   reduction: "sum"    

@@ -4,13 +4,13 @@ import torchvision.transforms
 import pandas as pd
 
 
-from Config import TensorType, PathType
+from Config.BaseTypes import TensorType, PathType, _NNBaseClass
 from .Transforms import IdentityTransform
 from torch.utils.data import Dataset
 from abc import ABCMeta, abstractmethod
 
 
-class DatasetBase(torch.utils.data.Dataset, metaclass=ABCMeta):
+class DatasetBase(_NNBaseClass):
     r"""
     Dataset Base abstract class
 
