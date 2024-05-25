@@ -21,3 +21,7 @@ class MSELoss(LossBase):
         elif self.reduction == "sum":
             return (pred - target).pow(2).sum()
         return (pred - target).pow(2).mean()
+
+    def __del__(self):
+
+        print("DDDD")

@@ -65,6 +65,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Config\ConfigFiles\config.yaml" />
+    <Content Include="Config\ConfigFiles\Loss\ABCD.yaml" />
     <Content Include="Config\ConfigFiles\Dataset\DatasetUE.yaml" />
     <Content Include="Config\ConfigFiles\Loss\MAE.yaml" />
     <Content Include="Config\ConfigFiles\Loss\MSE.yaml" />

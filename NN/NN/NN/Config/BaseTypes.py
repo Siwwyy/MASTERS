@@ -1,5 +1,6 @@
 from __future__ import annotations
-from typing import Union, Annotated
+from re import L
+from typing import Union, Annotated, Mapping, Any
 from pathlib import Path
 from .ConfigUtils import try_gpu
 
@@ -39,12 +40,78 @@ DictType = dict
 CurrentDevice: torch.device = try_gpu(gpu_idx=0)
 
 """ 
+    Currently used objects in NN library
+"""
+_DECLARED_OBJECTS_: list[_NNMetaClass] = []
+
+""" 
     Meta class of every class in NN library
 """
 
 
 class _NNMetaClass(type):
-    ...
+    def __new__(
+        metacls,
+        name: str,
+        bases: tuple[_NNMetaClass, ...],
+        namespace: dict[str, Any],
+        **kwargs: Any,
+    ):
+        """
+        Creates new instance
+
+        metacls: _NNMetaClass
+            The metaclass itself
+        name: str
+            name of the class
+        bases: tuple[_NNMetaClass, ...]
+            base classes of the class
+        namespace: dict[str, Any]
+            attributes of class e.g., __doc__, functions dict, variables dict and so on
+        kwargs: Any
+            additional keyword arguments (for now, not used)
+        """
+        print(
+            "  Meta.__new__(mcs=%s, name=%r, bases=%s, attrs=[%s], **%s)"
+            % (metacls, name, bases, ", ".join(namespace), kwargs)
+        )
+        return super().__new__(metacls, name, bases, namespace)
+
+    @classmethod
+    def __prepare__(
+        metacls, name: str, bases: tuple[_NNMetaClass, ...], **kwargs: Any
+    ) -> Mapping[str, object]:
+        """
+        Prepares class
+
+        metacls: _NNMetaClass
+            The metaclass itself
+        name: str
+            name of the class
+        bases: tuple[_NNMetaClass, ...]
+            base classes of the class
+        kwargs: Any
+            additional keyword arguments (for now, not used)
+        """
+        print(
+            "  Meta.__prepare__(mcs=%s, name=%r, bases=%s, **%s)"
+            % (metacls, name, bases, kwargs)
+        )
+        return super().__prepare__(metacls, name, bases, **kwargs)
+
+    def __call__(cls, *args: Any, **kwargs: Any) -> Any:
+        print("  Meta.__call__(cls=%s, *%s, **%s)" % (cls, args, kwargs))
+        _DECLARED_OBJECTS_.append(super().__call__(*args, **kwargs))
+        return _DECLARED_OBJECTS_[-1]
+
+    def __del__(cls):
+        # print("DDDD")
+        # for obj in _DECLARED_OBJECTS_:
+        #     if obj is cls:
+        #         _DECLARED_OBJECTS_.remove(obj)
+
+        # print(_DECLARED_OBJECTS_[0])
+        pass
 
 
 """ 

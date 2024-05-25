@@ -3,6 +3,7 @@
 #Main config, used for specifying rest of configuration file tree
 
 defaults:
+    # - _self_
     - dataset: DatasetUE
     # - model: Default_Description
     - loss: MSE
@@ -16,3 +17,5 @@ defaults:
 
 # loss:
 #   reduction: "sum"    
+
+# loss: ABCD
