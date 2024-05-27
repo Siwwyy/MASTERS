@@ -6,7 +6,12 @@ from hydra import compose, initialize
 from typing import TypeVar
 
 from pathlib import Path
-from Config.BaseTypes import _DECLARED_OBJECTS_, PathType, _NNBaseClass
+from Config.BaseTypes import (
+    _DECLARED_CLASSES_,
+    _DECLARED_OBJECTS_,
+    PathType,
+    _NNBaseClass,
+)
 from Dataset import DatasetUE
 from Loss import MSELoss
 
@@ -41,14 +46,6 @@ def configMain(cfg: DictConfig) -> None:
 
 if __name__ == "__main__":
     configMain()
-    # myLoss = MSELoss()
-
-    # print(id(_DECLARED_OBJECTS_[0]))
-    # print(id(myLoss))
-
-    # del myLoss
-
-    # print(_DECLARED_OBJECTS_[0])
     # print("END")
 
 

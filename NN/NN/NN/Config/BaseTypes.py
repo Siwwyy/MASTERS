@@ -1,11 +1,11 @@
 from __future__ import annotations
 from re import L
-from typing import Union, Annotated, Mapping, Any
+from typing import Callable, Union, Annotated, Mapping, Any
 from pathlib import Path
 from .ConfigUtils import try_gpu
 
 import torch
-
+import types
 
 __all__ = ["TensorType", "ShapeType", "PathType", "DictType", "CurrentDevice"]
 
@@ -39,17 +39,31 @@ DictType = dict
 """
 CurrentDevice: torch.device = try_gpu(gpu_idx=0)
 
+################################################
+# Metaclass, base class, decorators etc. section
+################################################
+
 """ 
     Currently used objects in NN library
 """
-_DECLARED_OBJECTS_: list[_NNMetaClass] = []
+_DECLARED_CLASSES_: list[_NNMetaClass] = []
+
+""" 
+    Currently used objects in NN library
+"""
+_DECLARED_OBJECTS_: list[_NNBaseClass] = []
 
 """ 
     Meta class of every class in NN library
 """
 
+_VERBOSE_METACLASS: bool = True  # TODO: make this configurable
+
 
 class _NNMetaClass(type):
+
+    _ABSTRACT_METHODS_: dict[str, str] = {}
+
     def __new__(
         metacls,
         name: str,
@@ -71,11 +85,20 @@ class _NNMetaClass(type):
         kwargs: Any
             additional keyword arguments (for now, not used)
         """
-        print(
-            "  Meta.__new__(mcs=%s, name=%r, bases=%s, attrs=[%s], **%s)"
-            % (metacls, name, bases, ", ".join(namespace), kwargs)
-        )
-        return super().__new__(metacls, name, bases, namespace)
+        if _VERBOSE_METACLASS:
+            print(
+                "  Meta.__new__(mcs=%s, name=%r, bases=%s, attrs=[%s], **%s)"
+                % (metacls, name, bases, ", ".join(namespace), kwargs)
+            )
+        newClass = super().__new__(metacls, name, bases, namespace)
+
+        for key, value in namespace.items():
+            if isinstance(value, types.FunctionType):
+                # print(value)
+                ...
+
+        # _DECLARED_CLASSES_.append(newClass)
+        return newClass
 
     @classmethod
     def __prepare__(
@@ -93,16 +116,20 @@ class _NNMetaClass(type):
         kwargs: Any
             additional keyword arguments (for now, not used)
         """
-        print(
-            "  Meta.__prepare__(mcs=%s, name=%r, bases=%s, **%s)"
-            % (metacls, name, bases, kwargs)
-        )
+        if _VERBOSE_METACLASS:
+            print(
+                "  Meta.__prepare__(mcs=%s, name=%r, bases=%s, **%s)"
+                % (metacls, name, bases, kwargs)
+            )
         return super().__prepare__(metacls, name, bases, **kwargs)
 
     def __call__(cls, *args: Any, **kwargs: Any) -> Any:
-        print("  Meta.__call__(cls=%s, *%s, **%s)" % (cls, args, kwargs))
-        _DECLARED_OBJECTS_.append(super().__call__(*args, **kwargs))
-        return _DECLARED_OBJECTS_[-1]
+        if _VERBOSE_METACLASS:
+            print("  Meta.__call__(cls=%s, *%s, **%s)" % (cls, args, kwargs))
+        # TODO: Make ability to create object from str
+        newObject = super().__call__(*args, **kwargs)
+        # _DECLARED_OBJECTS_.append(newObject)
+        return newObject
 
     def __del__(cls):
         # print("DDDD")
@@ -121,3 +148,13 @@ class _NNMetaClass(type):
 
 class _NNBaseClass(torch.nn.Module, metaclass=_NNMetaClass):
     ...
+
+
+"""
+    Decorators of NN API
+"""
+
+
+def _NNabstractMethod(func: Callable) -> Callable:
+    setattr(func, "_isAbstractMethod_", True)
+    return func

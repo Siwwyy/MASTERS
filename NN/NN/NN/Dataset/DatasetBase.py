@@ -4,7 +4,7 @@ import torchvision.transforms
 import pandas as pd
 
 
-from Config.BaseTypes import TensorType, PathType, _NNBaseClass
+from Config.BaseTypes import TensorType, PathType, _NNBaseClass, _NNabstractMethod
 from .Transforms import IdentityTransform
 from torch.utils.data import Dataset
 from abc import ABCMeta, abstractmethod
@@ -39,13 +39,13 @@ class DatasetBase(_NNBaseClass):
         if transforms is None:
             self.transforms = IdentityTransform()
 
-    @abstractmethod
+    @_NNabstractMethod
     def __len__(self) -> int:
         raise NotImplementedError(
             "Child class have to implement {} method".format(self.__len__.__name__)
         )
 
-    @abstractmethod
+    @_NNabstractMethod
     def __getitem__(self, idx: int = None) -> TensorType:
         assert idx is not None, "Index value can't be None!"
         raise NotImplementedError(
