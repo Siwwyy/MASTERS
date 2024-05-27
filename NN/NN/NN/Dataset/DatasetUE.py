@@ -1,7 +1,8 @@
-from DatasetBase import DatasetBase
+from Dataset.DatasetBase import DatasetBase
 from Config import TensorType, PathType
 from collections import namedtuple
 
+import torch
 import torchvision
 
 
@@ -35,15 +36,19 @@ class DatasetUE(DatasetBase):
         self.csvPath = csvPath if csvPath is not None else datasetRootPath
 
         # Named tuple for coords
-        cropCoordsTuple = namedtuple("Coords", ["x_min", "y_min", "x_max", "y_max"])
-        self.cropCoords = (
-            cropCoordsTuple(*cropCoords)
-            if cropCoords is not None
-            else cropCoordsTuple(x_min=0, y_min=0, x_max=64, y_max=64)
+        cropCoordsTuple = namedtuple(
+            "Coords",
+            ["x_min", "y_min", "x_max", "y_max"],
+            defaults=["0", "0", "64", "64"],
         )
+        self.cropCoords = cropCoordsTuple()
+        if cropCoords is not None:
+            self.cropCoords = cropCoordsTuple(*cropCoords)
 
-    def __len__(self) -> int:
-        pass
+    # def __len__(self) -> int:
+    #     return self.datasetSize
 
     def __getitem__(self, idx: int = None) -> TensorType:
-        pass
+        assert idx is not None, "Index value can't be None! Should be an integer"
+        assert idx < self.__len__(), "Index out of bound"
+        return torch.zeros(1, 64, 64)

@@ -1,3 +1,4 @@
 # Copyright, Damian Andrysiak 2024 XXI. century
 
-name: "Mean Squared Error"
+_target_: "Loss.MSELoss"
+reduction: "mean"

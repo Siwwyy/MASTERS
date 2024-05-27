@@ -3,8 +3,10 @@ from pathlib import Path
 
 import torch
 
-# Please keep this list sorted
 __all__ = ["try_gpu"]
+
+# Please keep this list sorted
+assert __all__ == sorted(__all__)
 
 
 def try_gpu(gpu_idx: int = 0) -> torch.device:
@@ -18,9 +20,13 @@ def try_gpu(gpu_idx: int = 0) -> torch.device:
     Returns
     -------
         function returns GPU on specified index if exists, if not, CPU."""
-    assert (
-        torch.cuda.is_available()
-    ), "CUDA is not available, Check if you have driver/software updates or proper NVIDIA GPU"
+    # Fallback to CPU if cuda is not available
+    if not torch.cuda.is_available():
+        print(
+            "CUDA is not available, Check if you have driver/software updates or proper NVIDIA GPU installed"
+        )
+        return torch.device("cpu")
+
     if torch.cuda.device_count() >= gpu_idx + 1:
         return torch.device(f"cuda:{gpu_idx}")
     return torch.device("cpu")

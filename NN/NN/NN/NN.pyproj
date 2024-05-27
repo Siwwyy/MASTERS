@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>3cb52152-466e-4349-893e-1b22633ae863</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>Dataloader\DataloaderUtils.py</StartupFile>
+    <StartupFile>NN.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -23,8 +23,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Config\BaseTypes.py" />
-    <Compile Include="Config\ConfigEngine\LoadConfig.py" />
-    <Compile Include="Config\ConfigEngine\__init__.py" />
     <Compile Include="Config\ConfigUtils\Utils.py" />
     <Compile Include="Config\ConfigUtils\__init__.py" />
     <Compile Include="Config\__init__.py" />
@@ -38,13 +36,15 @@
     <Compile Include="Dataset\Transforms\Transforms.py" />
     <Compile Include="Dataset\Transforms\__init__.py" />
     <Compile Include="Dataset\__init__.py" />
-    <Compile Include="NeuralNetworkArchitectures\NN_Base.py" />
-    <Compile Include="NeuralNetworkArchitectures\__init__.py" />
+    <Compile Include="Loss\LossBase.py" />
+    <Compile Include="Loss\MSELoss.py" />
+    <Compile Include="Loss\__init__.py" />
+    <Compile Include="NeuralNetworkArchitecture\ModelBase.py" />
+    <Compile Include="NeuralNetworkArchitecture\__init__.py" />
     <Compile Include="NN.py" />
     <Compile Include="TrainingPipeline\TrainingPipeline.py" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Config\ConfigEngine\" />
     <Folder Include="Config\ConfigFiles\" />
     <Folder Include="Config\ConfigFiles\Dataset\" />
     <Folder Include="Config\ConfigFiles\Loss\" />
@@ -56,15 +56,18 @@
     <Folder Include="CustomKernels\Tests\" />
     <Folder Include="Dataset\" />
     <Folder Include="Dataset\Transforms\" />
-    <Folder Include="NeuralNetworkArchitectures\" />
+    <Folder Include="NeuralNetworkArchitecture\" />
     <Folder Include="Config\" />
     <Folder Include="CustomKernels\" />
     <Folder Include="Dataloader\" />
+    <Folder Include="Loss\" />
     <Folder Include="TrainingPipeline\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Config\ConfigFiles\config.yaml" />
-    <Content Include="Config\ConfigFiles\Dataset\UE.yaml" />
+    <Content Include="Config\ConfigFiles\Loss\ABCD.yaml" />
+    <Content Include="Config\ConfigFiles\Dataset\DatasetUE.yaml" />
+    <Content Include="Config\ConfigFiles\Loss\MAE.yaml" />
     <Content Include="Config\ConfigFiles\Loss\MSE.yaml" />
     <Content Include="CustomKernels\Kernels\AddKernel\addKernel_cuda_kernel.cu" />
     <Content Include="CustomKernels\Kernels\AddKernel\addKernel_cuda.cpp" />

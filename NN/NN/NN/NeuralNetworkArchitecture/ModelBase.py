@@ -3,11 +3,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from abc import ABCMeta, abstractmethod
-from Config.Config import TensorType, ShapeType
-from typing import Optional
+from Config import TensorType, ShapeType
 
 
-class Model_Base(torch.nn.Module, metaclass=ABCMeta):
+class ModelBase(torch.nn.Module, metaclass=ABCMeta):
     def __init__(
         self, name: str = "Model_Base", input_shape: ShapeType = (1, 3, 1920, 1080)
     ):
