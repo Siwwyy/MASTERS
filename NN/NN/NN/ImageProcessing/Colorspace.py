@@ -110,7 +110,7 @@ def detonemapReinhard(tensor: TensorType) -> TensorType:
         min value = 1e-4 to avoid e.g., gradients problem
     """
     newTensor = torch.empty_like(tensor)
-    newTensor = tensor / (1.0 - tensor)
+    newTensor[:] = tensor / (1.0 - tensor)
     return newTensor.clip(min=1e-4)
 
 

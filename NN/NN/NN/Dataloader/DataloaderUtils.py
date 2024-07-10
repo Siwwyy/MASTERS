@@ -90,7 +90,10 @@ def saveEXR(
         channels to read, e.g., channels=["R", "G", "B"], channels=["R"] etc.
     """
     assert tensor is not None, "Tensor can't be None!"
-    assert tensor.dim() in [2, 3], "Tensor dim must be equal 2 or 3!"
+    assert tensor.dim() in [
+        2,
+        3,
+    ], f"Tensor dim must be equal 2 or 3!, not dim = {tensor.dim()}"
 
     if channels is None:
         channels = ["R", "G", "B"]

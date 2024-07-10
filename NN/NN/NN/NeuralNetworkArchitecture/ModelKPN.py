@@ -5,6 +5,8 @@ import torch.nn.functional as F
 
 from abc import ABCMeta, abstractmethod
 from Config import TensorType, ShapeType, _NNBaseClass
+from ImageProcessing.ImageGradient import calculateGradientMagnitude, _AVAILABLE_KERNELS
+from Dataloader import saveEXR
 
 """
 A Reduced-Precision Network for Image Reconstruction (QWNET)
@@ -24,7 +26,12 @@ class InputProcessing(_NNBaseClass):
     def forward(
         self, input: TensorType = None, output: TensorType = None
     ) -> TensorType:
-        pass
+
+        gradMagnitude = calculateGradientMagnitude(
+            input, _AVAILABLE_KERNELS["sobelKernel"]
+        )
+
+        print()
 
 
 """
