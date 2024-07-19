@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from functools import partial
+from typing import Mapping, Union
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -52,25 +54,41 @@ class EncoderBlock(_NNBaseClass):
     EncoderBlock
     """
 
-    def __init__(self):
-        layers = nn.ModuleDict(
-            {
-                "conv3x3": nn.Conv2d(
-                    3, 3, (3, 3)
-                ),  # TODO how many channels are in/out, for now keep 3 as we operate on RGB data
-                "batchNorm": nn.BatchNorm2d(3),
-                "elu": nn.ELU(),
-                "conv3x3": nn.Conv2d(
-                    3, 3, (3, 3)
-                ),  # TODO how many channels are in/out, for now keep 3 as we operate on RGB data
-                "batchNorm": nn.BatchNorm2d(3),
-                "elu": nn.ELU(),
-                "maxPool2x2": nn.MaxPool2d((2, 2)),
-            }
-        )
+    def __init__(self, layers: Union[nn.ModuleDict, Mapping] | None = None):
+        super().__init__()
+        self.layers = layers
+        if self.layers is None:
+            self.layers = nn.ModuleDict(
+                {  # no need to add 2x the same key, but added just in case,
+                    # for now, these are the same, but in future change conv3x3 to
+                    # 1conv3x3, 2conv3x3 etc. if the names are the same
+                    "conv3x3": nn.Conv2d(
+                        3, 3, (3, 3)
+                    ),  # TODO how many channels are in/out, for now keep 3 as we operate on RGB data
+                    "batchNorm": nn.BatchNorm2d(3),
+                    "elu": nn.ELU(),
+                    "conv3x3": nn.Conv2d(
+                        3, 3, (3, 3)
+                    ),  # TODO how many channels are in/out, for now keep 3 as we operate on RGB data
+                    "batchNorm": nn.BatchNorm2d(3),
+                    "elu": nn.ELU(),
+                    "maxPool2x2": nn.MaxPool2d((2, 2)),
+                }
+            )
 
     def forward(self, input: TensorType = None) -> TensorType:
-        ...
+
+        # 1 -> conv3x3 -> batchNorm -> elu
+        layerOut = self.layers["conv3x3"](input)
+        layerOut = self.layers["batchNorm"](layerOut)
+        layerOut = self.layers["elu"](layerOut)
+        # 2 -> conv3x3 -> batchNorm -> elu
+        layerOut = self.layers["conv3x3"](layerOut)
+        layerOut = self.layers["batchNorm"](layerOut)
+        layerOut = self.layers["elu"](layerOut)
+        skipConnection = layerOut.clone()  # skip connection happens after second ELU
+        # 3 -> Max Pool 2x2
+        return self.layers["maxPool2x2"](layerOut)  # out
 
 
 class DecoderBlock(_NNBaseClass):
@@ -78,25 +96,48 @@ class DecoderBlock(_NNBaseClass):
     DecoderBlock
     """
 
-    def __init__(self):
-        layers = nn.ModuleDict(
-            {
-                "conv3x3": nn.Conv2d(
-                    3, 3, (3, 3)
-                ),  # TODO how many channels are in/out, for now keep 3 as we operate on RGB data
-                "batchNorm": nn.BatchNorm2d(3),
-                "elu": nn.ELU(),
-                "conv3x3": nn.Conv2d(
-                    3, 3, (3, 3)
-                ),  # TODO how many channels are in/out, for now keep 3 as we operate on RGB data
-                "batchNorm": nn.BatchNorm2d(3),
-                "elu": nn.ELU(),
-                "maxPool2x2": nn.MaxPool2d((2, 2)),
-            }
-        )
+    def __init__(
+        self,
+        layers: Union[nn.ModuleDict, Mapping] | None = None,
+        upsampleBlockType: str = "nearest",
+    ):
+        self.layers = layers
+        if self.layers is None:
+            self.layers = nn.ModuleDict(
+                {
+                    "conv1x1": nn.Conv2d(
+                        3, 3, (1, 1)
+                    ),  # TODO how many channels are in/out, for now keep 3 as we operate on RGB data
+                    "batchNorm": nn.BatchNorm2d(3),
+                    "elu": nn.ELU(),
+                    "conv3x3": nn.Conv2d(
+                        3, 3, (3, 3)
+                    ),  # TODO how many channels are in/out, for now keep 3 as we operate on RGB data
+                    "batchNorm": nn.BatchNorm2d(3),
+                    "elu": nn.ELU(),
+                    "maxPool2x2": nn.MaxPool2d((2, 2)),
+                }
+            )
 
-    def forward(self, input: TensorType = None) -> TensorType:
-        ...
+        self.upsampleLayer = partial(F.upsample, scale_factor=2, mode=upsampleBlockType)
+
+    def forward(
+        self, input: TensorType = None, skipConnection: TensorType = None
+    ) -> TensorType:
+
+        # upsample Input
+        upsampledInput = self.upsampleLayer(input)
+
+        # 1 -> skipConnection + upsampledInput to conv1x1 -> Batch Norm -> ELU
+        layerOut = self.layers["conv1x1"](
+            upsampledInput + skipConnection
+        )  # Add skip connection before going to conv1x1
+        layerOut = self.layers["batchNorm"](layerOut)
+        layerOut = self.layers["elu"](layerOut)
+        # 2 -> conv3x3 -> Batch Norm -> ELU
+        layerOut = self.layers["conv3x3"](layerOut)
+        layerOut = self.layers["batchNorm"](layerOut)
+        return self.layers["elu"](layerOut)  # out
 
 
 @dataclass

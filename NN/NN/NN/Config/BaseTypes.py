@@ -6,7 +6,14 @@ from .ConfigUtils import try_gpu
 import torch
 import types
 
-__all__ = ["TensorType", "ShapeType", "PathType", "DictType", "CurrentDevice"]
+__all__ = [
+    "TensorType",
+    "ShapeType",
+    "PathType",
+    "DictType",
+    "CurrentDevice",
+    "_NNBaseClass",
+]
 
 # TensorType = Annotated[torch.tensor, "Possible Tensor type"]
 # ShapeType = Annotated[Union[tuple, torch.Size], "Possible Shape types of the
@@ -146,7 +153,8 @@ class _NNMetaClass(type):
 
 
 class _NNBaseClass(torch.nn.Module, metaclass=_NNMetaClass):
-    ...
+    def __init__(self):
+        super().__init__()
 
 
 """

@@ -1,5 +1,6 @@
-from .ColorSpace import *
+from .Colorspace import *
 from .ImageGradient import *
+
 
 __all__ = ["ColorSpace", "ImageGradient"]
 
