@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from functools import partial
+from turtle import width
 from typing import Mapping, Union
 import torch
 import torch.nn as nn
@@ -149,16 +150,150 @@ class InputFilter(_NNBaseClass):
     def __init__(self):
 
         self.conv1x1 = nn.Conv2d(
-            in_channels=3, out_channels=3, kernel_size=(3, 3)
+            in_channels=3, out_channels=18, kernel_size=(1, 1)
         )  # 1x1 conv
         self.softmax = nn.Softmax()
         self.avgPool = nn.AvgPool2d(kernel_size=(2, 2))
 
+        # Shape [number_of_filters, input_channels, height, width].
+        numberOfFilters = 9
+        inputChannels = 3
+        height = 3
+        width = 3
+        self.filter3x3_1 = torch.zeros(
+            numberOfFilters, inputChannels, height, width, dtype=torch.float32
+        )
+        self.filter3x3_2 = torch.zeros(
+            numberOfFilters, inputChannels, height, width, dtype=torch.float32
+        )
+
+    def forward(
+        self,
+        input: TensorType = None,
+        warpedOutput: TensorType = None,
+        inputFeatureExtraction: TensorType = None,
+    ) -> tuple[TensorType, TensorType]:
+
+        # Get weights to filters
+        filterWeights2x3x3 = self.softmax(
+            self.conv1x1(inputFeatureExtraction)
+        )  # conv1x1 + softmax
+
+        self.filter3x3_1 = filterWeights2x3x3[:8]  # from [0 to 8)
+        self.filter3x3_2 = filterWeights2x3x3[8:]  # from [8 to 17)
+
+        # Make sure i.e., device, dtype are ok
+        self.filter3x3_1.to(input)
+        self.filter3x3_2.to(input)
+
+        # Filter1 3x3 input
+        input = F.conv2d(input, self.filter3x3_1, padding="same")
+        # Filter2 3x3 warpedOutput
+        warpedOutput = F.conv2d(warpedOutput, self.filter3x3_2, padding="same")
+
+        # Skip connection
+        skipConnection = input + warpedOutput
+
+        return self.avgPool(skipConnection.clone()), skipConnection  # out
+
+
+# Filter
+class Filter(_NNBaseClass):
+    """
+    Filter
+    """
+
+    def __init__(self):
+
+        self.conv1x1 = nn.Conv2d(
+            in_channels=3, out_channels=9, kernel_size=(1, 1)
+        )  # 1x1 conv
+        self.softmax = nn.Softmax()
+        self.avgPool = nn.AvgPool2d(kernel_size=(2, 2))
+
+        # Shape [number_of_filters, input_channels, height, width].
+        numberOfFilters = 9
+        inputChannels = 3
+        height = 3
+        width = 3
+        self.filter3x3 = torch.zeros(
+            numberOfFilters, inputChannels, height, width, dtype=torch.float32
+        )
+
     def forward(
         self, input: TensorType = None, inputFeatureExtraction: TensorType = None
+    ) -> tuple[TensorType, TensorType]:
+
+        # Get weights to filters
+        filterWeights1x3x3 = self.softmax(
+            self.conv1x1(inputFeatureExtraction)
+        )  # conv1x1 + softmax
+        self.filter3x3 = filterWeights1x3x3  # from [0 to 8)
+
+        # Make sure i.e., device, dtype are ok
+        self.filter3x3.to(input)
+
+        # Filter 3x3
+        input = F.conv2d(input, self.filter3x3, padding="same")
+        # Skip connection
+        skipConnection = input.clone()
+
+        return self.avgPool(input.clone()), skipConnection  # out
+
+
+# FilterPlusSkip
+class FilterPlusSkip(_NNBaseClass):
+    """
+    Filter + Skip
+    """
+
+    def __init__(self, upsampleBlockType: str = "nearest"):
+
+        self.conv1x1 = nn.Conv2d(
+            in_channels=3, out_channels=10, kernel_size=(1, 1)
+        )  # 1x1 conv
+        self.softmax = nn.Softmax()
+
+        # Shape [number_of_filters, input_channels, height, width].
+        numberOfFilters = 9
+        inputChannels = 3
+        height = 3
+        width = 3
+        self.filter3x3 = torch.zeros(
+            numberOfFilters, inputChannels, height, width, dtype=torch.float32
+        )
+        self.multiplier = torch.tensor([0.0], dtype=torch.float32)
+
+        self.upsampleLayer = partial(F.upsample, scale_factor=2, mode=upsampleBlockType)
+
+    def forward(
+        self,
+        input: TensorType = None,
+        inputFeatureExtraction: TensorType = None,
+        skipConnection: TensorType = None,
     ) -> TensorType:
 
-        return None
+        # Get weights to filters
+        filterWeights1x3x3 = self.softmax(
+            self.conv1x1(inputFeatureExtraction)
+        )  # conv1x1 + softmax
+        self.filter3x3 = filterWeights1x3x3[:9]  # from [0 to 9)
+        self.multiplier = filterWeights1x3x3[9]  # from 9th
+
+        # Make sure i.e., device, dtype are ok
+        self.filter3x3.to(input)
+        self.multiplier.to(input)
+
+        # Upsample2x2 + Filter 3x3
+        input = self.upsampleLayer(input)
+        input = F.conv2d(input, self.filter3x3, padding="same")
+        # Skip connection
+        skip = input.clone()
+
+        # Multiplication by weight (called multiplier here)
+        mulOutput = skipConnection * self.multiplier
+
+        return skip + mulOutput  # Output RGB
 
 
 # QWNET
