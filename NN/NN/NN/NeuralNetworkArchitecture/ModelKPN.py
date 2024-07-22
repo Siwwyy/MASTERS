@@ -55,7 +55,12 @@ class EncoderBlock(_NNBaseClass):
     EncoderBlock
     """
 
-    def __init__(self, layers: Union[nn.ModuleDict, Mapping] | None = None):
+    def __init__(
+        self,
+        layers: Union[nn.ModuleDict, Mapping] | None = None,
+        inChannels: int = 3,
+        outChannels: int = 3,
+    ):
         super().__init__()
         self.layers = layers
         if self.layers is None:
@@ -64,14 +69,18 @@ class EncoderBlock(_NNBaseClass):
                     # for now, these are the same, but in future change conv3x3 to
                     # 1conv3x3, 2conv3x3 etc. if the names are the same
                     "conv3x3_1": nn.Conv2d(
-                        in_channels=3, out_channels=3, kernel_size=(3, 3)
+                        in_channels=inChannels,
+                        out_channels=inChannels,
+                        kernel_size=(3, 3),
                     ),  # TODO how many channels are in/out, for now keep 3 as we operate on RGB data
-                    "batchNorm_1": nn.BatchNorm2d(num_features=3),
+                    "batchNorm_1": nn.BatchNorm2d(num_features=inChannels),
                     "elu_1": nn.ELU(),
                     "conv3x3_2": nn.Conv2d(
-                        in_channels=3, out_channels=3, kernel_size=(3, 3)
+                        in_channels=inChannels,
+                        out_channels=outChannels,
+                        kernel_size=(3, 3),
                     ),  # TODO how many channels are in/out, for now keep 3 as we operate on RGB data
-                    "batchNorm_2": nn.BatchNorm2d(num_features=3),
+                    "batchNorm_2": nn.BatchNorm2d(num_features=outChannels),
                     "elu_2": nn.ELU(),
                     "maxPool2x2": nn.MaxPool2d(kernel_size=(2, 2)),
                 }
@@ -101,6 +110,8 @@ class DecoderBlock(_NNBaseClass):
     def __init__(
         self,
         layers: Union[nn.ModuleDict, Mapping] | None = None,
+        inChannels: int = 3,
+        outChannels: int = 3,
         upsampleBlockType: str = "nearest",
     ):
         self.layers = layers
@@ -108,14 +119,18 @@ class DecoderBlock(_NNBaseClass):
             self.layers = nn.ModuleDict(
                 {
                     "conv1x1_1": nn.Conv2d(
-                        in_channels=3, out_channels=3, kernel_size=(1, 1)
+                        in_channels=inChannels,
+                        out_channels=inChannels,
+                        kernel_size=(1, 1),
                     ),  # TODO how many channels are in/out, for now keep 3 as we operate on RGB data
-                    "batchNorm_1": nn.BatchNorm2d(num_features=3),
+                    "batchNorm_1": nn.BatchNorm2d(num_features=inChannels),
                     "elu_1": nn.ELU(),
                     "conv3x3_2": nn.Conv2d(
-                        in_channels=3, out_channels=3, kernel_size=(3, 3)
+                        in_channels=inChannels,
+                        out_channels=outChannels,
+                        kernel_size=(3, 3),
                     ),  # TODO how many channels are in/out, for now keep 3 as we operate on RGB data
-                    "batchNorm_2": nn.BatchNorm2d(num_features=3),
+                    "batchNorm_2": nn.BatchNorm2d(num_features=outChannels),
                     "elu_2": nn.ELU(),
                 }
             )
@@ -314,8 +329,45 @@ class ModelKPN(_NNBaseClass):
 
     def __init__(self, name: str = "ModelKPN", modelInputs: ModelKPNInputs = None):
         super().__init__()
-        self.name = name
-        self.inputShape = modelInputs.inputShape
+
+        ##############################
+        # Feature Extraction (U-Net) #
+        ##############################
+
+        # Input Processing
+        self.inputProcessing = InputProcessing()
+
+        # Encoder Block
+        self.encoderBlock1 = EncoderBlock(layers=None, inChannels=8, outChannels=32)
+        self.encoderBlock2 = EncoderBlock(layers=None, inChannels=32, outChannels=64)
+        self.encoderBlock3 = EncoderBlock(layers=None, inChannels=64, outChannels=96)
+        self.encoderBlock4 = EncoderBlock(layers=None, inChannels=96, outChannels=128)
+        self.encoderBlock5 = EncoderBlock(layers=None, inChannels=128, outChannels=160)
+
+        # Decoder Block
+        self.decoderBlock1 = DecoderBlock(layers=None, inChannels=160, outChannels=128)
+        self.decoderBlock2 = DecoderBlock(layers=None, inChannels=128, outChannels=96)
+        self.decoderBlock3 = DecoderBlock(layers=None, inChannels=96, outChannels=64)
+        self.decoderBlock4 = DecoderBlock(layers=None, inChannels=64, outChannels=32)
+
+        ##############################
+        #       Filter Network       #
+        ##############################
+
+        # Input Filter
+        self.inputFilter = InputFilter()
+
+        # Filter
+        self.filter1 = Filter()
+        self.filter2 = Filter()
+        self.filter3 = Filter()
+        self.filter4 = Filter()
+
+        # Filter + Skip
+        self.filterPlusSkip1 = FilterPlusSkip()
+        self.filterPlusSkip2 = FilterPlusSkip()
+        self.filterPlusSkip3 = FilterPlusSkip()
+        self.filterPlusSkip4 = FilterPlusSkip()
 
     def forward(self, x: TensorType = None) -> TensorType:
         assert x is not None, "Input tensor X can't be None!"
