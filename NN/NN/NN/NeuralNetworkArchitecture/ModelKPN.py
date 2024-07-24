@@ -194,12 +194,13 @@ class InputFilter(_NNBaseClass):
             self.conv1x1(inputFeatureExtraction)
         )  # conv1x1 + softmax
 
-        self.filter3x3_1 = filterWeights2x3x3[:8]  # from [0 to 8)
-        self.filter3x3_2 = filterWeights2x3x3[8:]  # from [8 to 17)
+        # TODO shape here will be invalid for sure!
+        self.filter3x3_1 = filterWeights2x3x3[:9]  # from [0 to 9)
+        self.filter3x3_2 = filterWeights2x3x3[9:]  # from [9 to 17)
 
-        # Make sure i.e., device, dtype are ok
-        self.filter3x3_1.to(input)
-        self.filter3x3_2.to(input)
+        # # Make sure i.e., device, dtype are ok
+        # self.filter3x3_1.to(input)
+        # self.filter3x3_2.to(input)
 
         # Filter1 3x3 input
         input = F.conv2d(input, self.filter3x3_1, padding="same")
@@ -246,7 +247,7 @@ class Filter(_NNBaseClass):
         self.filter3x3 = filterWeights1x3x3  # from [0 to 8)
 
         # Make sure i.e., device, dtype are ok
-        self.filter3x3.to(input)
+        # self.filter3x3.to(input)
 
         # Filter 3x3
         input = F.conv2d(input, self.filter3x3, padding="same")
@@ -296,8 +297,8 @@ class FilterPlusSkip(_NNBaseClass):
         self.multiplier = filterWeights1x3x3[9]  # from 9th
 
         # Make sure i.e., device, dtype are ok
-        self.filter3x3.to(input)
-        self.multiplier.to(input)
+        # self.filter3x3.to(input)
+        # self.multiplier.to(input)
 
         # Upsample2x2 + Filter 3x3
         input = self.upsampleLayer(input)
@@ -374,3 +375,7 @@ class ModelKPN(_NNBaseClass):
 
     def __repr__(self):
         return self.name
+
+
+if __name__ == "__main__":
+    model = ModelKPN()
