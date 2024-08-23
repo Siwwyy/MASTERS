@@ -3,6 +3,7 @@ import OpenEXR
 import Imath
 import torch
 import numpy as np
+import pandas as pd
 
 from dataclasses import dataclass
 from Config import TensorType, PathType
@@ -121,3 +122,56 @@ def saveEXR(
     )
     output_file.writePixels(output_file_data)
     output_file.close()
+
+
+_UNREAL_CSV_HEADER_FORMAT_: list[str] = [
+    "Frame Number",
+    "Frame Name",
+    "Proj_Mat_rowY_colX",
+    "View_Mat_rowY_colX",
+    "Inv_Proj_Mat_rowY_colX",
+    "Inv_Proj_Mat_rowY_colX",
+    "Inv_View_Mat_rowY_colX",
+]
+# def loadUnrealCSV(pathToCSVFile : str = None, delimeter: str = ",", header: str = None):
+#     with open(pathToCSVFile, newline='') as csvfile:
+#         csvDictReader = csv.DictReader(csvfile)
+#         labels = next(csvDictReader, None)  # capture the headers
+#         print(csvDictReader.line_num)
+#         returnValue: list[str] = []
+#         if header is not None:
+#             if "Mat" in header:
+#                 tempHeader = header
+#                 header: list[str] = []
+#                 for i in range(4):
+#                     for j in range(4):
+#                         header.append(tempHeader.replace("Y", str(i)).replace("X", str(j)))
+
+#             for row in csvDictReader:
+#                 for headerValue in header:
+#                     returnValue.append(row[headerValue])
+
+#         else:
+#             for row in csvDictReader:
+#                 returnValue.append(row[header])
+
+
+#         return returnValue
+
+
+def loadUnrealCSV(
+    pathToCSVFile: str = None,
+    delimiter: str = ",",
+    startsWithFilter: str = None,
+    useCols: list[str] = None,
+):
+
+    # Read csv
+    csvFile = pd.read_csv(pathToCSVFile, header=0, delimiter=delimiter, usecols=useCols)
+
+    # If we look for something which starts by specified name, it will be filtered
+    # and data retunred will be related to filter string
+    if startsWithFilter is not None:
+        return csvFile.loc[:, csvFile.columns.str.startswith(startsWithFilter)]
+
+    return csvFile

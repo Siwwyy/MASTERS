@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>3cb52152-466e-4349-893e-1b22633ae863</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>NeuralNetworkArchitecture\ModelKPN.py</StartupFile>
+    <StartupFile>ImageProcessing\ImageTransform.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -38,6 +38,7 @@
     <Compile Include="Dataset\__init__.py" />
     <Compile Include="ImageProcessing\ColorSpace.py" />
     <Compile Include="ImageProcessing\ImageGradient.py" />
+    <Compile Include="ImageProcessing\ImageTransform.py" />
     <Compile Include="ImageProcessing\__init__.py" />
     <Compile Include="Loss\LossBase.py" />
     <Compile Include="Loss\MSELoss.py" />
