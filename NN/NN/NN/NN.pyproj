@@ -47,6 +47,8 @@
     <Compile Include="NeuralNetworkArchitecture\ModelKPN.py" />
     <Compile Include="NeuralNetworkArchitecture\__init__.py" />
     <Compile Include="NN.py" />
+    <Compile Include="Open3D\Visualization.py" />
+    <Compile Include="Open3D\__init__.py" />
     <Compile Include="TrainingPipeline\TrainingPipeline.py" />
   </ItemGroup>
   <ItemGroup>
@@ -67,6 +69,7 @@
     <Folder Include="Dataloader\" />
     <Folder Include="Loss\" />
     <Folder Include="ImageProcessing\" />
+    <Folder Include="Open3D\" />
     <Folder Include="TrainingPipeline\" />
   </ItemGroup>
   <ItemGroup>
