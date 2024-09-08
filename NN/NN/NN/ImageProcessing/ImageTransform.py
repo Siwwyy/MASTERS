@@ -6,6 +6,8 @@ from Config.BaseTypes import TensorType
 import torch
 import torch.nn.functional as F
 
+from Open3D.Visualization import showPointCloud3D
+
 __all__ = []
 
 
@@ -99,82 +101,66 @@ def reproject(
     )
     torch.set_printoptions(sci_mode=False)
 
-    print(projMat)
+    # TODO -> add max/min values of depth buffer (clamp)
 
+    # fill values from projection matrix at frame X
     Z_proj = projMat[3, 2]
-    W_proj = projMat[2, 2]
+    W_proj = projMat[2, 2]  # w coordinate aka "perspective divisior"
     X_proj = 1.0 / projMat[0, 0]  # get inverse of value, 1/x will become x
     Y_proj = 1.0 / projMat[1, 1]  # get inverse of value, 1/y will become y
 
-    xx = np.tile(np.arange(1920, dtype=np.float32)[None, :], (1080, 1))
-    yy = np.tile(np.arange(1080, dtype=np.float32)[:, None], (1, 1920))
+    # get NDC coords grid in X,Y axis
+    X_NDC_GRID, Y_NDC_GRID = getNDCGrid(1920, 1080)
 
-    xx = 2 * (xx / 1920) - 1
-    yy = (2 * (yy / 1080) - 1) * 1
-
+    # obtain camera position
     Z_cam = Z_proj / (currDepth + W_proj)
-    X_cam = X_proj * xx * Z_cam
-    Y_cam = Y_proj * yy * Z_cam
+    X_cam = X_proj * X_NDC_GRID * Z_cam
+    Y_cam = Y_proj * Y_NDC_GRID * Z_cam
 
-    # # Get screen offset from NDC
-    # XGrid = getScreenCoordsFromNDC(currMV[:, :1, :, :], 1920)
-    # YGrid = getScreenCoordsFromNDC(currMV[:, 1:2, :, :], 1080)
-    # ZGrid = currDepth
-
-    # # XNDC = XGrid / 1920 * 2.0 - 1.0
-    # # YNDC = YGrid / 1080 * 2.0 - 1.0
-    # XNDC = getNDCFromScreenCoords(XGrid, 1920)
-    # YNDC = getNDCFromScreenCoords(YGrid, 1080)
+    print(X_cam.min(), X_cam.max())
+    print(Y_cam.min(), Y_cam.max())
+    print(Y_cam.min(), Y_cam.max())
 
     return torch.cat([X_cam, Y_cam, Z_cam], dim=-3)
-    # return torch.cat([Z_cam], dim=-3)
 
 
 from Dataloader.DataloaderUtils import loadEXR, loadUnrealCSV, saveEXR
 
-x, y = getNDCGrid(1920, 1080)
-print(x[:5][:5])
-print(y[:5][:5])
-print()
-i, j = getNDCGrid(1920, 1080, indexing="ij")
-print(i[0][:5])
-print(j[0][:5])
-# print(abc)
 
-# pthPrevColor = PureWindowsPath(
-#     # r"F:\MASTERS\UE4\DATASET\InfiltratorDemo_4_26_2\DumpedBuffers\1920x1080-native\SceneColor\30.exr"
-#     r"F:\MASTERS\UE4\DATASET\SubwaySequencer_4_26_2\DumpedBuffers\1920x1080-native\SceneColorTexture\4.exr"
-# )
+pthPrevColor = PureWindowsPath(
+    # r"F:\MASTERS\UE4\DATASET\InfiltratorDemo_4_26_2\DumpedBuffers\1920x1080-native\SceneColor\30.exr"
+    r"F:\MASTERS\UE4\DATASET\SubwaySequencer_4_26_2\DumpedBuffers\1920x1080-native\SceneColorTexture\5.exr"
+)
 
-# pthMV = PureWindowsPath(
-#     # r"F:\MASTERS\UE4\DATASET\InfiltratorDemo_4_26_2\DumpedBuffers\1920x1080-native\SceneColor\30.exr"
-#     r"F:\MASTERS\UE4\DATASET\SubwaySequencer_4_26_2\DumpedBuffers\1920x1080-native\SceneVelocityTexture\5.exr"
-# )
+pthMV = PureWindowsPath(
+    # r"F:\MASTERS\UE4\DATASET\InfiltratorDemo_4_26_2\DumpedBuffers\1920x1080-native\SceneColor\30.exr"
+    r"F:\MASTERS\UE4\DATASET\SubwaySequencer_4_26_2\DumpedBuffers\1920x1080-native\SceneVelocityTexture\5.exr"
+)
 
-# pthDepth = PureWindowsPath(
-#     # r"F:\MASTERS\UE4\DATASET\InfiltratorDemo_4_26_2\DumpedBuffers\1920x1080-native\SceneColor\30.exr"
-#     r"F:\MASTERS\UE4\DATASET\SubwaySequencer_4_26_2\DumpedBuffers\1920x1080-native\SceneDepthTexture\5.exr"
-# )
+pthDepth = PureWindowsPath(
+    # r"F:\MASTERS\UE4\DATASET\InfiltratorDemo_4_26_2\DumpedBuffers\1920x1080-native\SceneColor\30.exr"
+    r"F:\MASTERS\UE4\DATASET\SubwaySequencer_4_26_2\DumpedBuffers\1920x1080-native\SceneDepthTexture\5.exr"
+)
 
-# prevColorBuffer = loadEXR(str(pthPrevColor))
-# mvBuffer = loadEXR(str(pthMV), channels=["R", "G"])
-# depthBuffer = loadEXR(str(pthDepth), channels=["R"])
+prevColorBuffer = loadEXR(str(pthPrevColor))
+mvBuffer = loadEXR(str(pthMV), channels=["R", "G"])
+depthBuffer = loadEXR(str(pthDepth), channels=["R"])
 
 
-# pth = Path(
-#     r"F:\MASTERS\UE4\DATASET\SubwaySequencer_4_26_2\DumpedBuffers\info_Native.csv"
-# )
-# projMat = loadUnrealCSV(pth, startsWithFilter="Proj_Mat")
-# print(projMat)
+pth = Path(
+    r"F:\MASTERS\UE4\DATASET\SubwaySequencer_4_26_2\DumpedBuffers\info_Native.csv"
+)
+projMat = loadUnrealCSV(pth, startsWithFilter="Proj_Mat")
+print(projMat)
 
-# reprojected = reproject(
-#     prevColorBuffer.unsqueeze(0),
-#     mvBuffer.unsqueeze(0),
-#     depthBuffer.unsqueeze(0),
-#     torch.from_numpy(projMat.values).to(torch.float32)[5].view(4, 4),
-# )
+reprojected = reproject(
+    prevColorBuffer.unsqueeze(0),
+    mvBuffer.unsqueeze(0),
+    depthBuffer.unsqueeze(0),
+    torch.from_numpy(projMat.values).to(torch.float32)[5].view(4, 4),
+)
 
-
+showPointCloud3D(reprojected.squeeze(0))
 # outPth = PureWindowsPath(r"F:\MASTERS\testNDCToCameraSpace.exr")
 # saveEXR(str(outPth), reprojected.squeeze(0), channels=["R", "G", "B"])
 
