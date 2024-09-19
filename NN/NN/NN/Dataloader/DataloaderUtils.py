@@ -206,8 +206,6 @@ def loadCSV(
 
 # load csv specialization
 # Its done because, loadCSV loads whole csv, we want more flexibility here ;)
-
-
 def _loadCSV(
     pathToCSVFile: str = None,
     delimiter: str = ",",
@@ -226,9 +224,12 @@ def _loadCSV(
 
     loadedCSV = torch.from_numpy(loadedCSV.values)
     loadedCSV = loadedCSV.to(device=device, dtype=torch.float32)
-    loadedCSV = loadedCSV[frameIdx]
+    loadedCSV = loadedCSV[frameIdx]  # get matrix value at specified index
     # we expect 4x4 matrix like in game engines etc. (homogeneous matrix)
     return loadedCSV.view(4, 4)
+    # TODO make it more generic, because now, it will load e.g., frame idx and it will make
+    # frame_idx.view(4,4), which has no sense
 
 
+# helper specialization (partial)
 loadUnrealCSV = partial(_loadCSV)

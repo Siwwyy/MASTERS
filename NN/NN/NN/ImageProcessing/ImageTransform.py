@@ -8,7 +8,7 @@ from Config.BaseTypes import TensorType
 import torch
 import torch.nn.functional as F
 
-from Open3D.Visualization import showPointCloud2D, showPointCloud3D
+from Open3D.Visualization import showPointCloud3D
 
 __all__ = [
     "getPixelFromNDC",

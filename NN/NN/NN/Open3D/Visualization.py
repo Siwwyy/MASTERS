@@ -7,7 +7,7 @@ import numpy as np
 
 __all__ = ["showPointCloud3D"]
 
-
+# TODO, make it working, it should work like 3D but 2D plane, but maybe there is a substitute for 2D, otherwise, make fallback to visualize point cloud with showPointCloud3D(), by adding new 3rd channel automatically
 def showPointCloud2D(
     tensor: TensorType = None, min_range: int = -1000, max_range: int = 1000
 ) -> None:
