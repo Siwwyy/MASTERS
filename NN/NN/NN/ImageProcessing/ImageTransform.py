@@ -11,27 +11,27 @@ import torch.nn.functional as F
 from Open3D.Visualization import showPointCloud2D, showPointCloud3D
 
 __all__ = [
-    "getPixelCoordsFromNDC",
-    "getNDCFromScreenCoords",
+    "getPixelFromNDC",
+    "getNDCFromPixel",
     "getPixelGridFromNDCGrid",
-    "getNDCGridFromScreenGrid",
-    "getWorldCoordsFromClip",
+    "getNDCGridFromPixelGrid",
+    "getWorldFromClip",
     "getLinearDepth",
-    "getNDCCoordGrid",
-    "getPixelCoordGrid",
+    "getNDCGrid",
+    "getPixelGrid",
     "projectionToViewSpace",
     "reproject",
 ]
 
 
-def getPixelCoordsFromNDC(
+def getPixelFromNDC(
     tensor: TensorType = None, screenDimResolution: int = None
 ) -> TensorType:
     assert screenDimResolution is not None, "screenDimResolution must be provided!"
     return (tensor + 1.0) * (screenDimResolution - 1.0) * 0.5
 
 
-def getNDCFromScreenCoords(
+def getNDCFromPixel(
     tensor: TensorType = None, screenDimResolution: int = None
 ) -> TensorType:
     assert screenDimResolution is not None, "screenDimResolution must be provided!"
@@ -46,24 +46,26 @@ def getPixelGridFromNDCGrid(ndcXYGrid: TensorType = None) -> TensorType:
         in dx12, bottom-left corner is -1,-1 NDC, but in pytorch manner, its top-left corner, thats why we do not have to invert Y (flip) axis
 
     """
+    ndcXYGrid = ndcXYGrid.clone()  # clone is to avoid using the same memory
     H, W = ndcXYGrid.size(-3), ndcXYGrid.size(-2)
     ndcXYGrid[..., 0:1] = (ndcXYGrid[..., 0:1] + 1.0) * (W - 1.0) * 0.5  # x dir
     ndcXYGrid[..., 1:2] = (ndcXYGrid[..., 1:2] + 1.0) * (H - 1.0) * 0.5  # y dir
     return ndcXYGrid  # now it becames a pixel coords grid
 
 
-def getNDCGridFromScreenGrid(screenXYGrid: TensorType = None) -> TensorType:
+def getNDCGridFromPixelGrid(pixelXYGrid: TensorType = None) -> TensorType:
     r"""
     see https://learn.microsoft.com/en-us/windows/win32/direct3d10/d3d10-graphics-programming-guide-resources-coordinates
 
     """
-    H, W = screenXYGrid.size(-3), screenXYGrid.size(-2)
-    screenXYGrid[..., 0:1] = (screenXYGrid[..., 0:1] / W) * 2.0 - 1.0  # x dir
-    screenXYGrid[..., 1:2] = (screenXYGrid[..., 1:2] / H) * 2.0 - 1.0  # y dir
-    return screenXYGrid  # now it becames a ndc coords grid
+    pixelXYGrid = pixelXYGrid.clone()  # clone is to avoid using the same memory
+    H, W = pixelXYGrid.size(-3), pixelXYGrid.size(-2)
+    pixelXYGrid[..., 0:1] = (pixelXYGrid[..., 0:1] / W) * 2.0 - 1.0  # x dir
+    pixelXYGrid[..., 1:2] = (pixelXYGrid[..., 1:2] / H) * 2.0 - 1.0  # y dir
+    return pixelXYGrid.clone()  # now it becames a ndc coords grid
 
 
-def getWorldCoordsFromClip(
+def getCameraFromClip(
     tensor: TensorType = None, screenDimResolution: int = None
 ) -> TensorType:
     r"""
@@ -88,7 +90,7 @@ def getLinearDepth(depth: TensorType = None) -> TensorType:
     return (2.0 * near * far) / (far + near - depth * (far - near))
 
 
-def getNDCCoordGrid(
+def getNDCGrid(
     width: int = None, height: int = None, indexing: str = "xy"
 ) -> TensorType:
     r""" """
@@ -103,7 +105,7 @@ def getNDCCoordGrid(
     return torch.meshgrid([X_NDC, Y_NDC], indexing=indexing)
 
 
-def getPixelCoordGrid(
+def getPixelGrid(
     width: int = None, height: int = None, indexing: str = "xy"
 ) -> TensorType:
     r""" """
@@ -143,15 +145,15 @@ def projectionToViewSpace(
     Y_proj = 1.0 / projMat[1, 1]  # get inverse of value, 1/y will become y
 
     # get NDC coords grid in X,Y axis
-    X_NDC_GRID, Y_NDC_GRID = getNDCCoordGrid(1920, 1080)
+    X_NDC_GRID, Y_NDC_GRID = getNDCGrid(1920, 1080)
 
     # obtain pixels relative to camera position
     Z_cam = Z_proj / (currDepth + W_proj)
     X_cam = X_proj * X_NDC_GRID * Z_cam  # x_proj * x_ndc * z_cam
     Y_cam = Y_proj * Y_NDC_GRID * Z_cam  # y_proj * y_ndc * z_cam
 
-    # X_Pixel_Coords = getPixelCoordsFromNDC(X_NDC_GRID, 1920)
-    # Y_Pixel_Coords = getPixelCoordsFromNDC(Y_NDC_GRID, 1080)
+    # X_Pixel_Coords = getPixelFromNDC(X_NDC_GRID, 1920)
+    # Y_Pixel_Coords = getPixelFromNDC(Y_NDC_GRID, 1080)
 
     return torch.cat([X_cam, Y_cam, Z_cam], dim=-3)
 
@@ -177,7 +179,7 @@ def reproject(
     prevColorDtype = prevColor.dtype
 
     # Get grid
-    NDC_GRID_X, NDC_GRID_Y = getNDCCoordGrid(WIDTH, HEIGHT)
+    NDC_GRID_X, NDC_GRID_Y = getNDCGrid(WIDTH, HEIGHT)
     NDC_GRID_XY = torch.stack([NDC_GRID_X, NDC_GRID_Y], dim=-1).unsqueeze(
         0
     )  # get batch dim with unsqueeze
@@ -232,10 +234,10 @@ def reproject(
 #     mvBuffer.unsqueeze(0),
 #     depthBuffer.unsqueeze(0)
 # )
-# print(mvBuffer.shape)
+
 # # showPointCloud3D(reprojected.squeeze(0), min_range=0.0, max_range=1000.0)
-# outPth = PureWindowsPath(r"F:\MASTERS\testGrid.exr")
-# saveEXR(str(outPth), reprojected.view(1,1, 1080, 1920).squeeze(0), channels=["R"])
+# outPth = PureWindowsPath(r"F:\MASTERS\testReprojection.exr")
+# saveEXR(str(outPth), reprojected.squeeze(0), channels=["R", "G", "B"])
 
 
 # # pth = Path(r"F:\MASTERS\UE4\DATASET\SubwaySequencer_4_26_2\DumpedBuffers\info_Native.csv")
