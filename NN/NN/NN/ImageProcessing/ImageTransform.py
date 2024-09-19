@@ -1,34 +1,66 @@
 ﻿from functools import partial
 from pathlib import Path, PureWindowsPath
 from typing import Any, Callable, Union
+
+from torch.nn.modules import padding
 from Config.BaseTypes import TensorType
 
 import torch
 import torch.nn.functional as F
 
-from Open3D.Visualization import showPointCloud3D
+from Open3D.Visualization import showPointCloud2D, showPointCloud3D
 
-__all__ = []
+__all__ = [
+    "getPixelCoordsFromNDC",
+    "getNDCFromScreenCoords",
+    "getPixelGridFromNDCGrid",
+    "getNDCGridFromScreenGrid",
+    "getWorldCoordsFromClip",
+    "getLinearDepth",
+    "getNDCCoordGrid",
+    "getPixelCoordGrid",
+    "projectionToViewSpace",
+    "reproject",
+]
 
 
-def getScreenCoordsFromNDC(
+def getPixelCoordsFromNDC(
     tensor: TensorType = None, screenDimResolution: int = None
 ) -> TensorType:
-    assert (
-        tensor.dim() == 4
-    ), "input tensor must be in NCHW format, but got with dim {}".format(tensor.dim())
     assert screenDimResolution is not None, "screenDimResolution must be provided!"
-    return ((tensor + 1.0) * screenDimResolution) * 0.5
+    return (tensor + 1.0) * (screenDimResolution - 1.0) * 0.5
 
 
 def getNDCFromScreenCoords(
     tensor: TensorType = None, screenDimResolution: int = None
 ) -> TensorType:
-    assert (
-        tensor.dim() == 4
-    ), "input tensor must be in NCHW format, but got with dim {}".format(tensor.dim())
     assert screenDimResolution is not None, "screenDimResolution must be provided!"
-    return (tensor / screenDimResolution) * 2.0 - 1
+    return (tensor / screenDimResolution) * 2.0 - 1.0
+
+
+def getPixelGridFromNDCGrid(ndcXYGrid: TensorType = None) -> TensorType:
+    r"""
+    see https://learn.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-rasterizer-stage-getting-started?redirectedfrom=MSDN
+        https://learn.microsoft.com/en-us/windows/win32/direct3d10/d3d10-graphics-programming-guide-resources-coordinates
+
+        in dx12, bottom-left corner is -1,-1 NDC, but in pytorch manner, its top-left corner, thats why we do not have to invert Y (flip) axis
+
+    """
+    H, W = ndcXYGrid.size(-3), ndcXYGrid.size(-2)
+    ndcXYGrid[..., 0:1] = (ndcXYGrid[..., 0:1] + 1.0) * (W - 1.0) * 0.5  # x dir
+    ndcXYGrid[..., 1:2] = (ndcXYGrid[..., 1:2] + 1.0) * (H - 1.0) * 0.5  # y dir
+    return ndcXYGrid  # now it becames a pixel coords grid
+
+
+def getNDCGridFromScreenGrid(screenXYGrid: TensorType = None) -> TensorType:
+    r"""
+    see https://learn.microsoft.com/en-us/windows/win32/direct3d10/d3d10-graphics-programming-guide-resources-coordinates
+
+    """
+    H, W = screenXYGrid.size(-3), screenXYGrid.size(-2)
+    screenXYGrid[..., 0:1] = (screenXYGrid[..., 0:1] / W) * 2.0 - 1.0  # x dir
+    screenXYGrid[..., 1:2] = (screenXYGrid[..., 1:2] / H) * 2.0 - 1.0  # y dir
+    return screenXYGrid  # now it becames a ndc coords grid
 
 
 def getWorldCoordsFromClip(
@@ -51,39 +83,40 @@ def getLinearDepth(depth: TensorType = None) -> TensorType:
     https://learnopengl.com/Advanced-OpenGL/Depth-testing
      return (2.0 * near * far) / (far + near - z * (far - near));
     """
-    near = 0.001
-    far = 1000
+    near = 0.0001
+    far = 10000
     return (2.0 * near * far) / (far + near - depth * (far - near))
 
 
-def getNDCGrid(
+def getNDCCoordGrid(
     width: int = None, height: int = None, indexing: str = "xy"
 ) -> TensorType:
     r""" """
     _NDC_MIN_ = -1.0
     _NDC_MAX_ = 1.0
     X_NDC = torch.linspace(
-        start=_NDC_MIN_, end=_NDC_MAX_, steps=width, dtype=torch.float16
-    )
+        start=_NDC_MIN_, end=_NDC_MAX_, steps=width, dtype=torch.float32
+    )  # grid sampler is not implemented for half float16!
     Y_NDC = torch.linspace(
-        start=_NDC_MIN_, end=_NDC_MAX_, steps=height, dtype=torch.float16
-    )
+        start=_NDC_MIN_, end=_NDC_MAX_, steps=height, dtype=torch.float32
+    )  # grid sampler is not implemented for half float16!
     return torch.meshgrid([X_NDC, Y_NDC], indexing=indexing)
 
 
-def getScreenCoordGrid(
+def getPixelCoordGrid(
     width: int = None, height: int = None, indexing: str = "xy"
 ) -> TensorType:
     r""" """
-    X_SCREEN = torch.linspace(start=0, end=width, steps=width, dtype=torch.float16)
-    Y_SCREEN = torch.linspace(start=0, end=height, steps=height, dtype=torch.float16)
-    return torch.meshgrid([X_SCREEN, Y_SCREEN], indexing=indexing)
+    X_PIXEL = torch.arange(
+        start=0, end=width, step=1, dtype=torch.float32
+    )  # grid sampler is not implemented for half float16!
+    Y_PIXEL = torch.arange(
+        start=0, end=height, step=1, dtype=torch.float32
+    )  # grid sampler is not implemented for half float16!
+    return torch.meshgrid([X_PIXEL, Y_PIXEL], indexing=indexing)
 
 
-import numpy as np
-
-
-def reproject(
+def projectionToViewSpace(
     prevColor: TensorType = None,
     currMV: TensorType = None,
     currDepth: TensorType = None,
@@ -110,59 +143,99 @@ def reproject(
     Y_proj = 1.0 / projMat[1, 1]  # get inverse of value, 1/y will become y
 
     # get NDC coords grid in X,Y axis
-    X_NDC_GRID, Y_NDC_GRID = getNDCGrid(1920, 1080)
+    X_NDC_GRID, Y_NDC_GRID = getNDCCoordGrid(1920, 1080)
 
-    # obtain camera position
+    # obtain pixels relative to camera position
     Z_cam = Z_proj / (currDepth + W_proj)
-    X_cam = X_proj * X_NDC_GRID * Z_cam
-    Y_cam = Y_proj * Y_NDC_GRID * Z_cam
+    X_cam = X_proj * X_NDC_GRID * Z_cam  # x_proj * x_ndc * z_cam
+    Y_cam = Y_proj * Y_NDC_GRID * Z_cam  # y_proj * y_ndc * z_cam
 
-    print(X_cam.min(), X_cam.max())
-    print(Y_cam.min(), Y_cam.max())
-    print(Y_cam.min(), Y_cam.max())
+    # X_Pixel_Coords = getPixelCoordsFromNDC(X_NDC_GRID, 1920)
+    # Y_Pixel_Coords = getPixelCoordsFromNDC(Y_NDC_GRID, 1080)
 
     return torch.cat([X_cam, Y_cam, Z_cam], dim=-3)
 
 
-from Dataloader.DataloaderUtils import loadEXR, loadUnrealCSV, saveEXR
+def reproject(
+    prevColor: TensorType = None,
+    currMV: TensorType = None,
+    currDepth: TensorType = None,
+) -> TensorType:
+
+    r"""
+    Reprojection/Warping function
+    """
+
+    assert (
+        prevColor.dim() == 4 and currMV.dim() == 4 and currDepth.dim() == 4
+    ), "Input params must be in NCHW format, but got dims: 1st: {} 2nd: {} 3rd: {}".format(
+        prevColor.dim(), currMV.dim(), currDepth.dim()
+    )
+
+    # Helpers
+    HEIGHT, WIDTH = prevColor.size(-2), prevColor.size(-1)
+    prevColorDtype = prevColor.dtype
+
+    # Get grid
+    NDC_GRID_X, NDC_GRID_Y = getNDCCoordGrid(WIDTH, HEIGHT)
+    NDC_GRID_XY = torch.stack([NDC_GRID_X, NDC_GRID_Y], dim=-1).unsqueeze(
+        0
+    )  # get batch dim with unsqueeze
+
+    # Permute MV (Velocity) buffer channels to NHWC (otherwise, we are unable to subtract by grid simply)
+    nhwc_mv = currMV.permute(0, 2, 3, 1)
+
+    # "Projects" current grid values to previous by subtraction
+    NEW_NDC_COORDS = NDC_GRID_XY - nhwc_mv
+
+    return F.grid_sample(
+        prevColor.float(),
+        NEW_NDC_COORDS,
+        mode="bilinear",
+        padding_mode="zeros",
+        align_corners=False,
+    ).to(dtype=prevColorDtype)
 
 
-pthPrevColor = PureWindowsPath(
-    # r"F:\MASTERS\UE4\DATASET\InfiltratorDemo_4_26_2\DumpedBuffers\1920x1080-native\SceneColor\30.exr"
-    r"F:\MASTERS\UE4\DATASET\SubwaySequencer_4_26_2\DumpedBuffers\1920x1080-native\SceneColorTexture\5.exr"
-)
-
-pthMV = PureWindowsPath(
-    # r"F:\MASTERS\UE4\DATASET\InfiltratorDemo_4_26_2\DumpedBuffers\1920x1080-native\SceneColor\30.exr"
-    r"F:\MASTERS\UE4\DATASET\SubwaySequencer_4_26_2\DumpedBuffers\1920x1080-native\SceneVelocityTexture\5.exr"
-)
-
-pthDepth = PureWindowsPath(
-    # r"F:\MASTERS\UE4\DATASET\InfiltratorDemo_4_26_2\DumpedBuffers\1920x1080-native\SceneColor\30.exr"
-    r"F:\MASTERS\UE4\DATASET\SubwaySequencer_4_26_2\DumpedBuffers\1920x1080-native\SceneDepthTexture\5.exr"
-)
-
-prevColorBuffer = loadEXR(str(pthPrevColor))
-mvBuffer = loadEXR(str(pthMV), channels=["R", "G"])
-depthBuffer = loadEXR(str(pthDepth), channels=["R"])
+# from Dataloader.DataloaderUtils import loadEXR, loadUnrealCSV, readColorBuffer, readDepthBuffer, readVelocityBuffer, saveEXR
 
 
-pth = Path(
-    r"F:\MASTERS\UE4\DATASET\SubwaySequencer_4_26_2\DumpedBuffers\info_Native.csv"
-)
-projMat = loadUnrealCSV(pth, startsWithFilter="Proj_Mat")
-print(projMat)
+# pthPrevColor = PureWindowsPath(
+#     # r"F:\MASTERS\UE4\DATASET\InfiltratorDemo_4_26_2\DumpedBuffers\1920x1080-native\SceneColor\30.exr"
+#     r"F:\MASTERS\UE4\DATASET\SubwaySequencer_4_26_2\DumpedBuffers\1920x1080-native\SceneColorTexture\4.exr"
+# )
 
-reprojected = reproject(
-    prevColorBuffer.unsqueeze(0),
-    mvBuffer.unsqueeze(0),
-    depthBuffer.unsqueeze(0),
-    torch.from_numpy(projMat.values).to(torch.float32)[5].view(4, 4),
-)
+# pthMV = PureWindowsPath(
+#     # r"F:\MASTERS\UE4\DATASET\InfiltratorDemo_4_26_2\DumpedBuffers\1920x1080-native\SceneColor\30.exr"
+#     r"F:\MASTERS\UE4\DATASET\SubwaySequencer_4_26_2\DumpedBuffers\1920x1080-native\SceneVelocityTexture\5.exr"
+# )
 
-showPointCloud3D(reprojected.squeeze(0))
-# outPth = PureWindowsPath(r"F:\MASTERS\testNDCToCameraSpace.exr")
-# saveEXR(str(outPth), reprojected.squeeze(0), channels=["R", "G", "B"])
+# pthDepth = PureWindowsPath(
+#     # r"F:\MASTERS\UE4\DATASET\InfiltratorDemo_4_26_2\DumpedBuffers\1920x1080-native\SceneColor\30.exr"
+#     r"F:\MASTERS\UE4\DATASET\SubwaySequencer_4_26_2\DumpedBuffers\1920x1080-native\SceneDepthTexture\5.exr"
+# )
+
+# prevColorBuffer = readColorBuffer(str(pthPrevColor))
+# mvBuffer        = readVelocityBuffer(str(pthMV))
+# depthBuffer     = readDepthBuffer(str(pthDepth))
+
+
+# pthMatProj = Path(
+#     r"F:\MASTERS\UE4\DATASET\SubwaySequencer_4_26_2\DumpedBuffers\info_Native.csv"
+# )
+# # projMat = loadUnrealCSV(pth, startsWithFilter="Proj_Mat")
+# # print(projMat)
+# projMat = loadUnrealCSV(pthMatProj, startsWithFilter="Proj_Mat", frameIdx=5)
+
+# reprojected = reproject(
+#     prevColorBuffer.unsqueeze(0),
+#     mvBuffer.unsqueeze(0),
+#     depthBuffer.unsqueeze(0)
+# )
+# print(mvBuffer.shape)
+# # showPointCloud3D(reprojected.squeeze(0), min_range=0.0, max_range=1000.0)
+# outPth = PureWindowsPath(r"F:\MASTERS\testGrid.exr")
+# saveEXR(str(outPth), reprojected.view(1,1, 1080, 1920).squeeze(0), channels=["R"])
 
 
 # # pth = Path(r"F:\MASTERS\UE4\DATASET\SubwaySequencer_4_26_2\DumpedBuffers\info_Native.csv")

@@ -1,4 +1,6 @@
 # EXR Utils (EXR is a base input format for this project)
+from functools import partial
+from tkinter import CURRENT
 import OpenEXR
 import Imath
 import torch
@@ -6,16 +8,23 @@ import numpy as np
 import pandas as pd
 
 from dataclasses import dataclass
+
+from torch._prims_common import DeviceLikeType
 from Config import TensorType, PathType
+from Config.BaseTypes import CurrentDevice
+
+__all__ = [
+    "TensorDataTypeFP16",
+    "TensorDataTypeFP32",
+    "loadEXR",
+    "saveEXR",
+    "readColorBuffer",
+    "readVelocityBuffer",
+    "readDepthBuffer",
+    "loadUnrealCSV",
+]
 
 # Utility dataclasses for encapsulating data types for libs used in project
-@dataclass
-class TensorDataTypeFP32:
-    """Encapsulating fp32 datatype for libs: pytorch, numpy, openEXR"""
-
-    pytorch = torch.float32
-    numpy = np.float32
-    openEXR = Imath.PixelType(Imath.PixelType.FLOAT)
 
 
 @dataclass
@@ -25,6 +34,15 @@ class TensorDataTypeFP16:
     pytorch = torch.float16
     numpy = np.float16
     openEXR = Imath.PixelType(Imath.PixelType.HALF)
+
+
+@dataclass
+class TensorDataTypeFP32:
+    """Encapsulating fp32 datatype for libs: pytorch, numpy, openEXR"""
+
+    pytorch = torch.float32
+    numpy = np.float32
+    openEXR = Imath.PixelType(Imath.PixelType.FLOAT)
 
 
 def loadEXR(absolutePath: str, channels: list[str] | None = None) -> TensorType:
@@ -124,6 +142,39 @@ def saveEXR(
     output_file.close()
 
 
+# pre-defined/specialization of functions
+"""
+    Functions below are used for pre-defined way of loading buffers
+    i.e., we can specify what we should do before/after loading exr data
+    like clamping (at depth buffer case, because 0.0 value is treated as inf, too close to camera)
+    We can do even tonemap always after loading etc. not-limited ideas. 
+    Next case is readability, because we are not forced to specify which channels to load every time.
+"""
+
+
+def Color(absolutePath: str, device: DeviceLikeType = CurrentDevice):
+    color = loadEXR(absolutePath=absolutePath, channels=["R", "G", "B"])
+    return color.to(device)
+
+
+def Velocity(absolutePath: str, device: DeviceLikeType = CurrentDevice):
+    velocity = loadEXR(absolutePath=absolutePath, channels=["R", "G"])
+    return velocity.to(device)
+
+
+def Depth(absolutePath: str, device: DeviceLikeType = CurrentDevice):
+    depth = loadEXR(absolutePath=absolutePath, channels=["R"])
+    return depth.clip(min=1e-5).to(
+        device
+    )  # because 0.0 value is treated as inf, too close to camera
+
+
+readColorBuffer = partial(Color)
+readVelocityBuffer = partial(Velocity)
+readDepthBuffer = partial(Depth)
+
+
+# CSV from UE Loading utils
 _UNREAL_CSV_HEADER_FORMAT_: list[str] = [
     "Frame Number",
     "Frame Name",
@@ -133,33 +184,9 @@ _UNREAL_CSV_HEADER_FORMAT_: list[str] = [
     "Inv_Proj_Mat_rowY_colX",
     "Inv_View_Mat_rowY_colX",
 ]
-# def loadUnrealCSV(pathToCSVFile : str = None, delimeter: str = ",", header: str = None):
-#     with open(pathToCSVFile, newline='') as csvfile:
-#         csvDictReader = csv.DictReader(csvfile)
-#         labels = next(csvDictReader, None)  # capture the headers
-#         print(csvDictReader.line_num)
-#         returnValue: list[str] = []
-#         if header is not None:
-#             if "Mat" in header:
-#                 tempHeader = header
-#                 header: list[str] = []
-#                 for i in range(4):
-#                     for j in range(4):
-#                         header.append(tempHeader.replace("Y", str(i)).replace("X", str(j)))
-
-#             for row in csvDictReader:
-#                 for headerValue in header:
-#                     returnValue.append(row[headerValue])
-
-#         else:
-#             for row in csvDictReader:
-#                 returnValue.append(row[header])
 
 
-#         return returnValue
-
-
-def loadUnrealCSV(
+def loadCSV(
     pathToCSVFile: str = None,
     delimiter: str = ",",
     startsWithFilter: str = None,
@@ -175,3 +202,33 @@ def loadUnrealCSV(
         return csvFile.loc[:, csvFile.columns.str.startswith(startsWithFilter)]
 
     return csvFile
+
+
+# load csv specialization
+# Its done because, loadCSV loads whole csv, we want more flexibility here ;)
+
+
+def _loadCSV(
+    pathToCSVFile: str = None,
+    delimiter: str = ",",
+    startsWithFilter: str = None,
+    useCols: list[str] = None,
+    frameIdx: int = None,
+    device: DeviceLikeType = CurrentDevice,
+):
+    assert frameIdx is not None, "frameIdx must be specified"
+    loadedCSV = loadCSV(
+        pathToCSVFile=pathToCSVFile,
+        delimiter=delimiter,
+        startsWithFilter=startsWithFilter,
+        useCols=useCols,
+    )
+
+    loadedCSV = torch.from_numpy(loadedCSV.values)
+    loadedCSV = loadedCSV.to(device=device, dtype=torch.float32)
+    loadedCSV = loadedCSV[frameIdx]
+    # we expect 4x4 matrix like in game engines etc. (homogeneous matrix)
+    return loadedCSV.view(4, 4)
+
+
+loadUnrealCSV = partial(_loadCSV)
