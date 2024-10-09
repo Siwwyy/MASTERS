@@ -1,0 +1,3 @@
+# Copyright, Damian Andrysiak 2024 XXI. century
+
+_target_: "torch.optim.SGD"

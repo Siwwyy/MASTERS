@@ -45,8 +45,8 @@ class DatasetUE(DatasetBase):
         if cropCoords is not None:
             self.cropCoords = cropCoordsTuple(*cropCoords)
 
-    # def __len__(self) -> int:
-    #     return self.datasetSize
+    def __len__(self) -> int:
+        return self.datasetSize
 
     def __getitem__(self, idx: int = None) -> TensorType:
         assert idx is not None, "Index value can't be None! Should be an integer"

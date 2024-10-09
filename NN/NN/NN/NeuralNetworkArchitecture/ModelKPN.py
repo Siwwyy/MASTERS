@@ -31,7 +31,7 @@ class InputProcessing(_NNBaseClass):
     """
 
     def __init__(self):
-        pass
+        super().__init__()
 
     def forward(
         self, input: TensorType = None, warpedOutput: TensorType = None
@@ -114,6 +114,7 @@ class DecoderBlock(_NNBaseClass):
         outChannels: int = 3,
         upsampleBlockType: str = "nearest",
     ):
+        super().__init__()
         self.layers = layers
         if self.layers is None:
             self.layers = nn.ModuleDict(
@@ -163,6 +164,7 @@ class InputFilter(_NNBaseClass):
     """
 
     def __init__(self):
+        super().__init__()
 
         self.conv1x1 = nn.Conv2d(
             in_channels=3, out_channels=18, kernel_size=(1, 1)
@@ -220,6 +222,7 @@ class Filter(_NNBaseClass):
     """
 
     def __init__(self):
+        super().__init__()
 
         self.conv1x1 = nn.Conv2d(
             in_channels=3, out_channels=9, kernel_size=(1, 1)
@@ -264,6 +267,7 @@ class FilterPlusSkip(_NNBaseClass):
     """
 
     def __init__(self, upsampleBlockType: str = "nearest"):
+        super().__init__()
 
         self.conv1x1 = nn.Conv2d(
             in_channels=3, out_channels=10, kernel_size=(1, 1)
@@ -330,6 +334,8 @@ class ModelKPN(_NNBaseClass):
 
     def __init__(self, name: str = "ModelKPN", modelInputs: ModelKPNInputs = None):
         super().__init__()
+
+        self.name = name
 
         ##############################
         # Feature Extraction (U-Net) #

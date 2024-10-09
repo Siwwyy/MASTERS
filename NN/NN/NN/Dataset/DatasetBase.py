@@ -32,7 +32,7 @@ class DatasetBase(_NNBaseClass):
         super().__init__()
 
         self.datasetRootPath = datasetRootPath
-        self.datasetSize = 0
+        self.datasetSize = 1  # set always to 1 by default, because otherwise dataloader will raise an error
 
         # if tranforms has been not specified, then use Identity transform
         # x == id(x)

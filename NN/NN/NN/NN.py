@@ -1,9 +1,12 @@
 # Neural Network Engine
 
+from functools import partial
 import hydra
+import torch
+
 from omegaconf import DictConfig, OmegaConf
 from hydra import compose, initialize
-from typing import TypeVar
+from typing import TypeVar, Union
 
 from pathlib import Path
 from Config.BaseTypes import (
@@ -12,6 +15,8 @@ from Config.BaseTypes import (
     PathType,
     _NNBaseClass,
 )
+from Config.ConfigUtils.TrainingConfig import DispatchParams, ModelHyperparameters
+from TrainingPipeline import dispatchTraining
 from Dataset import DatasetUE
 from Loss import MSELoss
 
@@ -21,8 +26,10 @@ T_co = TypeVar("T_co", covariant=True)
 T = TypeVar("T", bound=_NNBaseClass)
 
 
-def createObjectfromConfig(cfg: DictConfig) -> T:
-    return hydra.utils.instantiate(cfg)
+def createObjectfromConfig(
+    cfg: DictConfig, partial: bool = False, **kwargs
+) -> Union[T, partial[T]]:
+    return hydra.utils.instantiate(cfg, **kwargs, _partial_=partial)
 
 
 _HYDRA_PARAMS = {
@@ -30,6 +37,7 @@ _HYDRA_PARAMS = {
     "config_path": "Config/ConfigFiles",
     "config_name": "config.yaml",
 }
+from torch.utils.data import DataLoader
 
 
 @hydra.main(**_HYDRA_PARAMS)
@@ -38,17 +46,25 @@ def configMain(cfg: DictConfig) -> None:
     print(OmegaConf.to_yaml(cfg))
     convertedCfg = OmegaConf.to_yaml(cfg)
 
-    # datasetType = cfg['dataset']
-
-    # abc  = datasetType['_class_name_'](datasetType['datasetRootPath'], datasetType['csvPath'])
+    # Create objects from hydra config
     dataset = createObjectfromConfig(cfg.dataset)
+    dataloader = createObjectfromConfig(cfg.dataloader, dataset=dataset)
     loss = createObjectfromConfig(cfg.loss)
-    # abc  = DatasetUE()
+    model = createObjectfromConfig(cfg.model)
+    optimizer = createObjectfromConfig(cfg.optimizer, params=model.parameters())
+    modelHyperaparemeters = createObjectfromConfig(cfg.hyperaparams)
+
+    # Create dispatch params
+    dispatchParams = DispatchParams(
+        modelHyperaparemeters, dataset, dataloader, loss, optimizer, model
+    )
+
+    # Training dispatch
+    dispatchTraining(dispatchParams)
 
 
 if __name__ == "__main__":
     configMain()
-    # print("END")
 
 
 # # the metaclass will automatically get passed the same argument
