@@ -1,3 +1,4 @@
+import math
 from typing import Union, Annotated, Dict
 from pathlib import Path
 
@@ -30,3 +31,19 @@ def try_gpu(gpu_idx: int = 0) -> torch.device:
     if torch.cuda.device_count() >= gpu_idx + 1:
         return torch.device(f"cuda:{gpu_idx}")
     return torch.device("cpu")
+
+
+def DIV_UP(nominator: int, denominator: int) -> int | float:
+    """Returns rounded up value (useful for getting blocks/threads amount)
+    Math formula: floor((nominator + denominator - 1) / denominator)
+    Parameters
+    ----------
+    nominator : int
+        nominator in math formula
+
+    denominator: int
+        denominator in math formula
+    Returns
+    -------
+        function returns rounded up + floor to closest divisior"""
+    return math.floor((nominator + denominator - 1) / denominator)

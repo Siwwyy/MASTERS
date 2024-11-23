@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>3cb52152-466e-4349-893e-1b22633ae863</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>NN.py</StartupFile>
+    <StartupFile>Misc\TemporalAA.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -45,6 +45,8 @@
     <Compile Include="Loss\LossBase.py" />
     <Compile Include="Loss\MSELoss.py" />
     <Compile Include="Loss\__init__.py" />
+    <Compile Include="Misc\TemporalAA.py" />
+    <Compile Include="Misc\__init__.py" />
     <Compile Include="NeuralNetworkArchitecture\ModelBase.py" />
     <Compile Include="NeuralNetworkArchitecture\ModelKPN.py" />
     <Compile Include="NeuralNetworkArchitecture\__init__.py" />
@@ -73,6 +75,7 @@
     <Folder Include="Dataloader\" />
     <Folder Include="Loss\" />
     <Folder Include="ImageProcessing\" />
+    <Folder Include="Misc\" />
     <Folder Include="Open3D\" />
     <Folder Include="TrainingPipeline\" />
   </ItemGroup>

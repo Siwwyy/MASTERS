@@ -185,22 +185,31 @@ _UNREAL_CSV_HEADER_FORMAT_: list[str] = [
     "Inv_View_Mat_rowY_colX",
 ]
 
+from pandas.core.arrays.numeric import NumericDtype
+
 
 def loadCSV(
     pathToCSVFile: str = None,
     delimiter: str = ",",
     startsWithFilter: str = None,
     useCols: list[str] = None,
+    dtype: NumericDtype = None,
 ):
 
     # Read csv
-    csvFile = pd.read_csv(pathToCSVFile, header=0, delimiter=delimiter, usecols=useCols)
+    csvFile = pd.read_csv(
+        pathToCSVFile,
+        header=0,
+        delimiter=delimiter,
+        usecols=useCols,
+        dtype=dtype,
+        index_col=False,
+    )
 
     # If we look for something which starts by specified name, it will be filtered
     # and data retunred will be related to filter string
     if startsWithFilter is not None:
         return csvFile.loc[:, csvFile.columns.str.startswith(startsWithFilter)]
-
     return csvFile
 
 
@@ -231,5 +240,29 @@ def _loadCSV(
     # frame_idx.view(4,4), which has no sense
 
 
+def _loadJitterXYCSV(
+    pathToCSVFile: str = None,
+    delimiter: str = ",",
+    startsWithFilter: str = None,
+    useCols: list[str] = None,
+    frameIdx: int = None,
+    device: DeviceLikeType = CurrentDevice,
+):
+    assert frameIdx is not None, "frameIdx must be specified"
+    loadedCSV = loadCSV(
+        pathToCSVFile=pathToCSVFile,
+        delimiter=delimiter,
+        startsWithFilter=startsWithFilter,
+        useCols=useCols,
+    )
+
+    loadedCSV = torch.from_numpy(loadedCSV.values)
+    loadedCSV = loadedCSV.to(device=device, dtype=torch.float32)
+    loadedCSV = loadedCSV[frameIdx]  # get matrix value at specified index
+    # we expect 4x4 matrix like in game engines etc. (homogeneous matrix)
+    return loadedCSV
+
+
 # helper specialization (partial)
 loadUnrealCSV = partial(_loadCSV)
+loadUnrealJitterXYCSV = partial(_loadJitterXYCSV)
