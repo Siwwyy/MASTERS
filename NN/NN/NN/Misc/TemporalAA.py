@@ -150,7 +150,7 @@ def TAAColorClampingCupy(
     )
     # prepare inputs to cupy kernel (cuda)
     cp_padded_input_tensor = cp.asarray(padded_input_tensor)
-    cp_output_tensor = cp.asarray(currentColorBuffer.float())
+    cp_output_tensor = cp.asarray(historyColorBuffer.float())
 
     # prepare dispatch/invocation
     THREADS_PER_BLOCK = 32
@@ -208,6 +208,11 @@ if __name__ == "__main__":
         NDC_GRID_XY = torch.stack([NDC_GRID_X, NDC_GRID_Y], dim=-1).unsqueeze(
             0
         )  # get batch dim with unsqueeze
+
+        # Invert Y axis, because of other convention used in Pytorch i.e., top-left is -1,-1, whereas
+        # in DX12 -1,-1 its bottom-left
+        CurrentVelocityBuffer[..., 1:2] = CurrentVelocityBuffer[..., 1:2] * -1.0
+
         # Permute MV (Velocity) buffer channels to NHWC (otherwise, we are unable to subtract by grid simply)
         nhwc_mv = CurrentVelocityBuffer.permute(0, 2, 3, 1)
         # "Projects" previous grid values to current by addition
@@ -220,6 +225,8 @@ if __name__ == "__main__":
             padding_mode="zeros",
             align_corners=False,
         )
+
+        # HistoryColorBuffer = TAAReprojectionResolve(HistoryColorBuffer, CurrentVelocityBuffer, CurrentDepthBuffer)
 
         # 2. Color Clamping pass
         # HistoryColorBuffer = TAAColorClampingPytorch(CurrentColorBuffer, HistoryColorBuffer)
@@ -252,7 +259,7 @@ if __name__ == "__main__":
         )
 
         # Accumulate samples to history
-        HistoryColorBuffer = dejitteredColorBuffer * 0.2 + HistoryColorBuffer * 0.8
+        HistoryColorBuffer = dejitteredColorBuffer * 0.1 + HistoryColorBuffer * 0.9
 
         saveEXR(
             str(DataPath / f"SceneColorTextureAfterAA/{idx}.exr"),

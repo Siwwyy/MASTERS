@@ -1,4 +1,4 @@
-﻿from functools import partial
+from functools import partial
 from pathlib import Path, PureWindowsPath
 from typing import Any, Callable, Union
 
@@ -8,7 +8,7 @@ from Config.BaseTypes import TensorType
 import torch
 import torch.nn.functional as F
 
-from Open3D.Visualization import showPointCloud3D
+# from Open3D.Visualization import showPointCloud3D
 
 __all__ = [
     "getPixelFromNDC",
@@ -43,7 +43,7 @@ def getPixelGridFromNDCGrid(ndcXYGrid: TensorType = None) -> TensorType:
     see https://learn.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-rasterizer-stage-getting-started?redirectedfrom=MSDN
         https://learn.microsoft.com/en-us/windows/win32/direct3d10/d3d10-graphics-programming-guide-resources-coordinates
 
-        in dx12, bottom-left corner is -1,-1 NDC, but in pytorch manner, its top-left corner, thats why we do not have to invert Y (flip) axis
+        in dx12, bottom-left corner is -1,-1 NDC, but in pytorch manner, its top-left corner, thats why we do have to invert Y (flip) axis
 
     """
     ndcXYGrid = ndcXYGrid.clone()  # clone is to avoid using the same memory
@@ -183,6 +183,10 @@ def reproject(
     NDC_GRID_XY = torch.stack([NDC_GRID_X, NDC_GRID_Y], dim=-1).unsqueeze(
         0
     )  # get batch dim with unsqueeze
+
+    # Invert Y axis, because of other convention used in Pytorch i.e., top-left is -1,-1, whereas
+    # in DX12 -1,-1 its bottom-left
+    currMV[..., 1:2] = currMV[..., 1:2] * -1.0
 
     # Permute MV (Velocity) buffer channels to NHWC (otherwise, we are unable to subtract by grid simply)
     nhwc_mv = currMV.permute(0, 2, 3, 1)

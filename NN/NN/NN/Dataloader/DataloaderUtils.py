@@ -1,6 +1,5 @@
 # EXR Utils (EXR is a base input format for this project)
 from functools import partial
-from tkinter import CURRENT
 import OpenEXR
 import Imath
 import torch
