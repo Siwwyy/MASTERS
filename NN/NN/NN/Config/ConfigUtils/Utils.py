@@ -33,7 +33,7 @@ def try_gpu(gpu_idx: int = 0) -> torch.device:
     return torch.device("cpu")
 
 
-def DIV_UP(nominator: int, denominator: int) -> int | float:
+def DIV_UP(nominator: int, denominator: int) -> Union[int, float]:
     """Returns rounded up value (useful for getting blocks/threads amount)
     Math formula: floor((nominator + denominator - 1) / denominator)
     Parameters

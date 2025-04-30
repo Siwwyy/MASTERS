@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>3cb52152-466e-4349-893e-1b22633ae863</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>Misc\TemporalAA.py</StartupFile>
+    <StartupFile>ImageProcessing\ImageTransform.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>

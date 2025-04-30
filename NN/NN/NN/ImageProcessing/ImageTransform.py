@@ -203,6 +203,55 @@ def reproject(
     ).to(dtype=prevColorDtype)
 
 
+import matplotlib.pyplot as plt
+import numpy as np
+from Dataloader.DataloaderUtils import (
+    loadEXR,
+    loadUnrealCSV,
+    readColorBuffer,
+    readDepthBuffer,
+    readVelocityBuffer,
+    saveEXR,
+)
+
+# def plot(data, time) -> None:
+#     # Data for plotting
+#     fig, ax = plt.subplots()
+#     ax.plot(time.numpy(), data.numpy())
+
+#     ax.set(xlabel='time (t)', ylabel='beta (B)')
+#     ax.yaxis.set_ticks(np.arange(0.0, 1.0, 0.1))
+#     ax.grid()
+
+#     plt.show()
+
+time_steps = 100
+betas_distribution = torch.linspace(
+    start=0.0, end=1.0, steps=time_steps, dtype=torch.float32
+)
+
+
+color_path = PureWindowsPath(
+    # r"F:\MASTERS\UE4\DATASET\InfiltratorDemo_4_26_2\DumpedBuffers\1920x1080-native\SceneColor\30.exr"
+    r"F:\MASTERS\UE4\DATASET\SubwaySequencer_4_26_2\DumpedBuffers\1920x1080-native\SceneColorTexture\30.exr"
+)
+outPth = PureWindowsPath(r"F:\MASTERS\NN\DIFFUSION_TEST")
+color_buffer = readColorBuffer(str(color_path))
+mean = color_buffer.mean(dim=0)
+variance = color_buffer.var(dim=0)
+
+for t in range(time_steps):
+
+    # print("Mean {} | Std {}".format(mean, std))
+    noise_t = torch.randn_like(color_buffer)
+    color_buffer = (
+        torch.sqrt(1.0 - betas_distribution[t]) * color_buffer
+        + betas_distribution[t] * noise_t
+    )
+    saveEXR(str(outPth / f"image_{t}.exr"), color_buffer, channels=["R", "G", "B"])
+    # Update coefficients for next time step
+
+
 # from Dataloader.DataloaderUtils import loadEXR, loadUnrealCSV, readColorBuffer, readDepthBuffer, readVelocityBuffer, saveEXR
 
 

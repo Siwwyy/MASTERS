@@ -323,8 +323,8 @@ class ModelKPNInputs:
     Dataclass which encapsulates additional input informations to the model
     """
 
-    inputShape: ShapeType = (1, 3, 1920, 1080)  # NCHW
-    outputShape: ShapeType = (1, 3, 1920, 1080)  # NCHW
+    inputShape: ShapeType = (1, 3, 256, 256)  # NCHW
+    outputShape: ShapeType = (1, 3, 256, 256)  # NCHW
 
 
 class ModelKPN(_NNBaseClass):
@@ -376,12 +376,56 @@ class ModelKPN(_NNBaseClass):
         self.filterPlusSkip3 = FilterPlusSkip()
         self.filterPlusSkip4 = FilterPlusSkip()
 
-    def forward(self, x: TensorType = None) -> TensorType:
+    def forward(
+        self, x: TensorType = None, warped_output: TensorType = None
+    ) -> TensorType:
         assert x is not None, "Input tensor X can't be None!"
+
+        # Feature Extractor
+        out_fe = self.inputProcessing(x, warped_output)
+
+        #
+        out_fe, skip_encoderBlock1 = self.encoderBlock1(out_fe)
+        out_fe, skip_encoderBlock2 = self.encoderBlock2(out_fe)
+        out_fe, skip_encoderBlock3 = self.encoderBlock3(out_fe)
+        out_fe, skip_encoderBlock4 = self.encoderBlock4(out_fe)
+        out_fe, act1 = self.encoderBlock5(
+            out_fe
+        )  # TODO check activations skip-connection
+
+        #
+        out_db1 = self.decoderBlock1(out_fe, skip_encoderBlock4)
+        out_db2 = self.decoderBlock2(out_db1, skip_encoderBlock3)
+        out_db3 = self.decoderBlock3(out_db2, skip_encoderBlock2)
+        out_db4 = self.decoderBlock4(out_db3, skip_encoderBlock1)
+
+        # Filter Network
+        out_fn, skip_inputFilter = self.inputFilter(x, warped_output, out_db4)
+
+        #
+        out_fn, skip_filter1 = self.filter1(out_fn, out_db3)
+        out_fn, skip_filter2 = self.filter2(out_fn, out_db2)
+        out_fn, skip_filter3 = self.filter3(out_fn, out_db1)
+        out_fn, _ = self.filter4(out_fn, act1)
+
+        #
+        out_fn = self.filterPlusSkip1(out_fn, out_db1, skip_filter3)
+        out_fn = self.filterPlusSkip2(out_fn, out_db2, skip_filter2)
+        out_fn = self.filterPlusSkip3(out_fn, out_db3, skip_filter1)
+        out_fn = self.filterPlusSkip4(out_fn, out_db4, skip_inputFilter)
+
+        return out_fn  # output RGB
 
     def __repr__(self):
         return self.name
 
 
 if __name__ == "__main__":
-    model = ModelKPN()
+
+    model_inputs = ModelKPNInputs()
+
+    # Test
+    x = torch.randn((1, 3, 64, 64))
+    model = ModelKPN(modelInputs=model_inputs)
+    pred = model(x)
+    assert pred.shape == x.shape

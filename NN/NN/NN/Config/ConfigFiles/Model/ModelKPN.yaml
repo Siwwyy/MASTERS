@@ -3,5 +3,5 @@
 _target_: "NeuralNetworkArchitecture.ModelKPN"
 name: "ModelKPN_v1"
 modelInputs:
-    inputShape: (1, 3, 1920, 1080)  # NCHW
-    outputShape: (1, 3, 1920, 1080)  # NCHW
+    #inputShape: (1, 3, 1920, 1080)  # NCHW
+    #outputShape: (1, 3, 1920, 1080)  # NCHW
