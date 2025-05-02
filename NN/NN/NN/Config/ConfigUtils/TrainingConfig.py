@@ -12,7 +12,7 @@ from NeuralNetworkArchitecture.ModelBase import ModelBase
 @dataclass
 class _ParamsBase:
     def __init_subclass__(cls) -> None:
-        print("ddd")
+        pass
 
 
 @dataclass
@@ -25,8 +25,7 @@ class ModelHyperparameters(_ParamsBase):
     numEpochs: int = 15
 
     def __dict__(self):
-        return
-        {
+        return {
             "inChannels": self.inChannels,
             "outChannels": self.outChannels,
             "learningRate": self.learningRate,
@@ -50,8 +49,7 @@ class DispatchParams(_ParamsBase):
     model: ModelBase = None
 
     def __dict__(self):
-        return
-        {
+        return {
             "hyperparams": self.hyperparams,
             "dataset": self.dataset,
             "dataloader": self.dataloader,

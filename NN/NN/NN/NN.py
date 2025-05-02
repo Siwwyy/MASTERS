@@ -37,7 +37,6 @@ _HYDRA_PARAMS = {
     "config_path": "Config/ConfigFiles",
     "config_name": "config.yaml",
 }
-from torch.utils.data import DataLoader
 
 
 @hydra.main(**_HYDRA_PARAMS)
