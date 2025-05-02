@@ -2,7 +2,7 @@
 
 ## About
 
-Super-Resolution UNET Based NN architecture
+Super-Resolution UNET Based NN architecture and more!
 
 
 ## Environment setup
@@ -23,9 +23,19 @@ https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html
 ### Env creation
 1. Create Environment (u can use pytorch_env as name or any other arbitrary name u like):
 
-    `micromamba create -n pytorch_env`
+    - `micromamba create -n pytorch_env`
 
-2. Install packages
+    - `micromamba activate pytorch_env`
+
+2. Install packages:
+    - Pytorch
+        - For Windows:
+
+        - For Linux:
+            - (AMD GPU) `pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/rocm6.3` 
+            - (NVIDIA GPU) `pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128`
+    - Hydra: `pip install hydra`
+
 
 
 ## Pre Commit hook installation
