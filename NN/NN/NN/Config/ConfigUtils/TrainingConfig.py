@@ -4,9 +4,9 @@ import torch
 from dataclasses import astuple, dataclass
 from torch.utils.data import DataLoader
 
-from Dataset.DatasetBase import DatasetBase
-from Loss.LossBase import LossBase
-from NeuralNetworkArchitecture.ModelBase import ModelBase
+from NN.Dataset.DatasetBase import DatasetBase
+from NN.Loss.LossBase import LossBase
+from NN.NeuralNetworkArchitecture.ModelBase import ModelBase
 
 
 @dataclass

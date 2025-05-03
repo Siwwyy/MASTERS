@@ -1,7 +1,7 @@
-from typing import Union
-from Config.BaseTypes import TensorType
-
 import torch
+
+from typing import Union
+from NN.Config.BaseTypes import TensorType
 
 __all__ = [
     "rgbToGrayScale",

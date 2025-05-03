@@ -9,18 +9,17 @@ from hydra import compose, initialize
 from typing import TypeVar, Union
 
 from pathlib import Path
-from Config.BaseTypes import (
+from NN.Config.BaseTypes import (
     _DECLARED_CLASSES_,
     _DECLARED_OBJECTS_,
     PathType,
     _NNBaseClass,
 )
-from Config.ConfigUtils.TrainingConfig import DispatchParams, ModelHyperparameters
-from TrainingPipeline import dispatchTraining
-from Dataset import DatasetUE
-from Loss import MSELoss
+from NN.Config.ConfigUtils.TrainingConfig import DispatchParams, ModelHyperparameters
+from NN.TrainingPipeline import dispatchTraining
+from NN.Dataset import DatasetUE
+from NN.Loss import MSELoss
 
-# from ImageProcessing import *
 
 T_co = TypeVar("T_co", covariant=True)
 T = TypeVar("T", bound=_NNBaseClass)
@@ -34,7 +33,7 @@ def createObjectfromConfig(
 
 _HYDRA_PARAMS = {
     "version_base": "1.3",
-    "config_path": "Config/ConfigFiles",
+    "config_path": "NN/Config/ConfigFiles",
     "config_name": "config.yaml",
 }
 

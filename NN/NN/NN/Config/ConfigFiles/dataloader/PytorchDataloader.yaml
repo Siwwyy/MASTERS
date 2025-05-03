@@ -1,6 +1,6 @@
 # Copyright, Damian Andrysiak 2024 XXI. century
 
-_target_: "torch.utils.data.dataloader.DataLoader"
+_target_: torch.utils.data.dataloader.DataLoader
 dataset: !!null
 batch_size: ${hyperaparams.batchSize}
 shuffle: True

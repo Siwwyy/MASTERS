@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torchvision.transforms
 
-from Config import TensorType, PathType
+from NN.Config import TensorType, PathType
 
 
 __all__ = ["IdentityTransform"]

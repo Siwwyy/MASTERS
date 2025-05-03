@@ -1,10 +1,6 @@
-from dataclasses import dataclass
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-
 from abc import ABCMeta, abstractmethod
-from Config import TensorType, ShapeType, _NNBaseClass
+from dataclasses import dataclass
+from NN.Config import TensorType, ShapeType, _NNBaseClass
 
 """
 Dataclass which encapsulates additional input informations to the model

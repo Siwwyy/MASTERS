@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 
-from Loss.LossBase import LossBase
-from Config import TensorType
+from NN.Loss.LossBase import LossBase
+from NN.Config import TensorType
 
 __all__ = ["MSELoss"]
 
@@ -23,5 +23,4 @@ class MSELoss(LossBase):
         return (pred - target).pow(2).mean()
 
     def __del__(self):
-
-        print("DDDD")
+        pass

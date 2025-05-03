@@ -1,8 +1,7 @@
 import torch
 import torch.nn as nn
 
-from Config.BaseTypes import TensorType, PathType, _NNBaseClass
-from abc import abstractmethod
+from NN.Config.BaseTypes import _NNabstractMethod, TensorType, PathType, _NNBaseClass
 
 __all__ = ["LossBase"]
 
@@ -15,7 +14,7 @@ class LossBase(_NNBaseClass):
         super().__init__()
         self.name = name
 
-    @abstractmethod
+    @_NNabstractMethod
     def forward(self, pred: TensorType = None, target: TensorType = None) -> TensorType:
         assert pred is not None, "Input tensor pred can't be None!"
         assert target is not None, "Input tensor target can't be None!"

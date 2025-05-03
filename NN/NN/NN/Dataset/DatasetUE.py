@@ -1,5 +1,5 @@
-from Dataset.DatasetBase import DatasetBase
-from Config import TensorType, PathType
+from NN.Dataset.DatasetBase import DatasetBase
+from NN.Config import TensorType, PathType
 from collections import namedtuple
 
 import torch

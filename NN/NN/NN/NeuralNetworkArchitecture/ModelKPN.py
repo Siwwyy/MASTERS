@@ -1,18 +1,17 @@
-from dataclasses import dataclass
-from functools import partial
-from turtle import width
-from typing import Mapping, Union
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from abc import ABCMeta, abstractmethod
-
+from dataclasses import dataclass
+from functools import partial
+from typing import Mapping, Union
 from torch.nn.modules import activation
-from Config import TensorType, ShapeType, _NNBaseClass
-from ImageProcessing.Colorspace import rgbToGrayScale
-from ImageProcessing.ImageGradient import calculateGradientMagnitude, _AVAILABLE_KERNELS
-from Dataloader import saveEXR
+from NN.Config import TensorType, ShapeType, _NNBaseClass
+from NN.ImageProcessing.Colorspace import rgbToGrayScale
+from NN.ImageProcessing.ImageGradient import (
+    calculateGradientMagnitude,
+    _AVAILABLE_KERNELS,
+)
 
 """
 A Reduced-Precision Network for Image Reconstruction (QWNET)

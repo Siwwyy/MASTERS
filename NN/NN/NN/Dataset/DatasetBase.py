@@ -4,7 +4,7 @@ import torchvision.transforms
 import pandas as pd
 
 
-from Config.BaseTypes import TensorType, PathType, _NNBaseClass, _NNabstractMethod
+from NN.Config.BaseTypes import TensorType, PathType, _NNBaseClass, _NNabstractMethod
 from .Transforms import IdentityTransform
 from torch.utils.data import Dataset
 from abc import ABCMeta, abstractmethod
