@@ -62,7 +62,7 @@ def getNDCGridFromPixelGrid(pixelXYGrid: TensorType = None) -> TensorType:
     H, W = pixelXYGrid.size(-3), pixelXYGrid.size(-2)
     pixelXYGrid[..., 0:1] = (pixelXYGrid[..., 0:1] / W) * 2.0 - 1.0  # x dir
     pixelXYGrid[..., 1:2] = (pixelXYGrid[..., 1:2] / H) * 2.0 - 1.0  # y dir
-    return pixelXYGrid.clone()  # now it becames a ndc coords grid
+    return pixelXYGrid  # now it becames a ndc coords grid
 
 
 def getCameraFromClip(

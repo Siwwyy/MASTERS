@@ -20,18 +20,14 @@ class LossBase(_NNBaseClass):
     def forward(self, pred: TensorType = None, target: TensorType = None) -> TensorType:
         assert pred is not None, "Input tensor pred can't be None!"
         assert target is not None, "Input tensor target can't be None!"
-        # raise NotImplementedError(
-        #     "Child class have to implement {} method".format(self.forward.__name__)
-        # )
-        return pred + target
 
     def __repr__(self) -> str:
         return self.name
 
 
 if __name__ == "__main__":
-    # pass
-    abc = LossBase()
-    # print(abc.__static_attributes__)
-    # print()
-    print(abc(0, 1))
+    pass
+    # abc = LossBase()
+    # # print(abc.__static_attributes__)
+    # # print()
+    # print(abc(0, 1))

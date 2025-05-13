@@ -49,6 +49,5 @@ class DatasetUE(DatasetBase):
         return self.datasetSize
 
     def __getitem__(self, idx: int = None) -> TensorType:
-        assert idx is not None, "Index value can't be None! Should be an integer"
-        assert idx < self.__len__(), "Index out of bound"
+        super().__getitem__(idx)
         return torch.zeros(1, 64, 64)

@@ -1,5 +1,5 @@
 from typing import List
-from Config import TensorType, PathType
+from NN.Config import TensorType, PathType
 
 import torch
 import open3d as o3d

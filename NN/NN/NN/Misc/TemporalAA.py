@@ -6,8 +6,8 @@ import torch.nn.functional as F
 import cupy as cp
 
 from pathlib import Path
-from Config.BaseTypes import CurrentDevice, TensorType
-from Dataloader.DataloaderUtils import (
+from NN.Config.BaseTypes import CurrentDevice, TensorType
+from NN.Dataloader.DataloaderUtils import (
     loadUnrealJitterXYCSV,
     loadEXR,
     loadUnrealCSV,
@@ -16,7 +16,7 @@ from Dataloader.DataloaderUtils import (
     readVelocityBuffer,
     saveEXR,
 )
-from ImageProcessing.ImageTransform import getNDCGrid, reproject
+from NN.ImageProcessing.ImageTransform import getNDCGrid, reproject
 
 
 def DIV_UP(nominator: int, denominator: int) -> int | float:

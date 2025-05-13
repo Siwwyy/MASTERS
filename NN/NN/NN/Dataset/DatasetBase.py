@@ -5,9 +5,7 @@ import pandas as pd
 
 
 from NN.Config.BaseTypes import TensorType, PathType, _NNBaseClass, _NNabstractMethod
-from .Transforms import IdentityTransform
-from torch.utils.data import Dataset
-from abc import ABCMeta, abstractmethod
+from NN.Dataset.Transforms.Transforms import IdentityTransform
 
 
 class DatasetBase(_NNBaseClass):
@@ -41,13 +39,18 @@ class DatasetBase(_NNBaseClass):
 
     @_NNabstractMethod
     def __len__(self) -> int:
-        raise NotImplementedError(
-            "Child class have to implement {} method".format(self.__len__.__name__)
-        )
+        ...
 
     @_NNabstractMethod
     def __getitem__(self, idx: int = None) -> TensorType:
-        assert idx is not None, "Index value can't be None!"
-        raise NotImplementedError(
-            "Child class have to implement {} method".format(self.__getitem__.__name__)
-        )
+        assert idx is not None, "Index value can't be None! Should be an integer"
+        assert idx < self.__len__(), "Index out of bound"
+        ...
+
+
+if __name__ == "__main__":
+    # pass
+    abc = DatasetBase()
+    # print(abc.__static_attributes__)
+    # print()
+    print(len(0, 1))

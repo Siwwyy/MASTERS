@@ -13,8 +13,7 @@ class MSELoss(LossBase):
         self.reduction = reduction
 
     def forward(self, pred: TensorType = None, target: TensorType = None) -> TensorType:
-        assert pred is not None, "Input tensor pred can't be None!"
-        assert target is not None, "Input tensor target can't be None!"
+        super().forward(pred, target)
 
         if self.reduction == "none":
             return (pred - target).pow(2)
