@@ -63,7 +63,7 @@ _DECLARED_OBJECTS_: list[_NNBaseClass] = []
     Meta class of every class in NN library
 """
 
-_VERBOSE_METACLASS: bool = False  # TODO: make this configurable
+_VERBOSE_METACLASS: bool = True  # TODO: make this configurable
 
 
 class _NNMetaClass(type):
@@ -96,15 +96,21 @@ class _NNMetaClass(type):
                 "  Meta.__new__(mcs=%s, name=%r, bases=%s, attrs=[%s], **%s)"
                 % (metacls, name, bases, ", ".join(namespace), kwargs)
             )
-        newClass = super().__new__(metacls, name, bases, namespace)
-
         for key, value in namespace.items():
-            if isinstance(value, types.FunctionType):
-                # print(value)
-                ...
+            ...
+            # print(key, value)
+            # print(getattr(value, '_isAbstractMethod_'))
+            # if hasattr(value, '_isAbstractMethod_'):
+            #     print("ABSTRACT!")
+            #     raise RuntimeError("Can't instantiate class with abstract method")
+            # if isinstance(value, types.FunctionType):
+            #     print(dir(value))
+            #     print(getattr(value, '_isAbstractMethod_'))
+            #     if hasattr
+            #     ...
 
         # _DECLARED_CLASSES_.append(newClass)
-        return newClass
+        return super().__new__(metacls, name, bases, namespace)
 
     @classmethod
     def __prepare__(
@@ -133,9 +139,12 @@ class _NNMetaClass(type):
         if _VERBOSE_METACLASS:
             print("  Meta.__call__(cls=%s, *%s, **%s)" % (cls, args, kwargs))
         # TODO: Make ability to create object from str
-        newObject = super().__call__(*args, **kwargs)
         # _DECLARED_OBJECTS_.append(newObject)
-        return newObject
+        for _, value in cls.__dict__.items():
+            if hasattr(value, "_isAbstractMethod_"):
+                raise RuntimeError("Can't instantiate class with an abstract method")
+
+        return super().__call__(*args, **kwargs)
 
     def __del__(cls):
         # print("DDDD")

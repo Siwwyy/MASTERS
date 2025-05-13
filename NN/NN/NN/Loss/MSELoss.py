@@ -22,5 +22,8 @@ class MSELoss(LossBase):
             return (pred - target).pow(2).sum()
         return (pred - target).pow(2).mean()
 
-    def __del__(self):
-        pass
+
+if __name__ == "__main__":
+    # pass
+    abc = MSELoss()
+    # print(abc(0,1))

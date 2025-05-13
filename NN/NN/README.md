@@ -38,6 +38,8 @@ https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html
     - Pandas: `pip install pandas`
     - OpenEXR: `pip install OpenEXR`
 
+3. Install <b>NN project </b> (operation should be done at level directory within pyproject.toml): `pip install .`
+
 
 
 ## Pre Commit hook installation
