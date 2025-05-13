@@ -51,3 +51,7 @@ class DatasetUE(DatasetBase):
     def __getitem__(self, idx: int = None) -> TensorType:
         super().__getitem__(idx)
         return torch.zeros(1, 64, 64)
+
+
+if __name__ == "__main__":
+    pass
