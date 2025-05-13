@@ -29,7 +29,8 @@ class DatasetUE(DatasetBase):
         self,
         datasetRootPath: PathType = None,
         csvPath: PathType | None = None,
-        cropCoords: tuple[int, int, int, int] | None = None,
+        cropCoords_lr: tuple[int, int, int, int] | None = None,
+        cropCoords_hr: tuple[int, int, int, int] | None = None,
         transforms: torchvision.transforms.Compose | None = None,
     ):
         super().__init__(datasetRootPath, transforms)
@@ -41,9 +42,13 @@ class DatasetUE(DatasetBase):
             ["x_min", "y_min", "x_max", "y_max"],
             defaults=["0", "0", "64", "64"],
         )
-        self.cropCoords = cropCoordsTuple()
-        if cropCoords is not None:
-            self.cropCoords = cropCoordsTuple(*cropCoords)
+
+        # Cropping
+        self.crop_coords_lr = cropCoordsTuple()
+        if cropCoords_lr is None:
+            self.crop_coords_lr = cropCoordsTuple(cropCoords_lr)
+        if cropCoords_hr is None:
+            self.cropCoords_hr = cropCoordsTuple(cropCoords_lr)
 
     def __len__(self) -> int:
         return self.datasetSize
@@ -54,4 +59,5 @@ class DatasetUE(DatasetBase):
 
 
 if __name__ == "__main__":
-    pass
+    # pass
+    abc = DatasetUE("DDD", "DDD")

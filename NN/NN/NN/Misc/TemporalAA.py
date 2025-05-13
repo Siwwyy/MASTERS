@@ -1,5 +1,6 @@
 import math
 from typing import Union
+from NN.Config.ConfigUtils.Utils import DIV_UP
 import torch
 import torch.nn.functional as F
 
@@ -17,10 +18,6 @@ from NN.Dataloader.DataloaderUtils import (
     saveEXR,
 )
 from NN.ImageProcessing.ImageTransform import getNDCGrid, reproject
-
-
-def DIV_UP(nominator: int, denominator: int) -> int | float:
-    return math.floor((nominator + denominator - 1) / denominator)
 
 
 def TAAReprojectionResolve(

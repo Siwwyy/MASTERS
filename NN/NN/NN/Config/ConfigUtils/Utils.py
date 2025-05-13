@@ -1,10 +1,12 @@
 import math
-from typing import Union, Annotated, Dict
-from pathlib import Path
-
+import hydra
 import torch
 
-__all__ = ["try_gpu"]
+from functools import partial
+from omegaconf import DictConfig
+from typing import Any, TypeVar, Union
+
+__all__ = ["CreateObjectfromConfig", "DIV_UP", "try_gpu"]
 
 # Please keep this list sorted
 assert __all__ == sorted(__all__)
@@ -47,3 +49,27 @@ def DIV_UP(nominator: int, denominator: int) -> Union[int, float]:
     -------
         function returns rounded up + floor to closest divisior"""
     return math.floor((nominator + denominator - 1) / denominator)
+
+
+# Creating objects from config _target_ in hydra
+
+T_co = TypeVar("T_co", covariant=True)
+T = TypeVar("T")
+
+
+def CreateObjectfromConfig(cfg: DictConfig, **kwargs: Any) -> Union[T, partial[T]]:
+    """Returns constructed object
+    Parameters
+    ----------
+    cfg : DictConfig
+        hydra config
+
+    partial: bool
+        determines if it should be a partial or instantiated objects
+
+    **kwargs: Any
+        additional keyword arguments
+    Returns
+    -------
+        Returns constructed object or partial"""
+    return hydra.utils.instantiate(cfg, **kwargs)

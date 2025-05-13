@@ -1,6 +1,7 @@
 # Neural Network Engine
 
 from functools import partial
+from NN.Config.ConfigUtils.Utils import CreateObjectfromConfig
 import hydra
 import torch
 
@@ -21,16 +22,6 @@ from NN.Dataset import DatasetUE
 from NN.Loss import MSELoss
 
 
-T_co = TypeVar("T_co", covariant=True)
-T = TypeVar("T", bound=_NNBaseClass)
-
-
-def createObjectfromConfig(
-    cfg: DictConfig, partial: bool = False, **kwargs
-) -> Union[T, partial[T]]:
-    return hydra.utils.instantiate(cfg, **kwargs, _partial_=partial)
-
-
 _HYDRA_PARAMS = {
     "version_base": "1.3",
     "config_path": "NN/Config/ConfigFiles",
@@ -45,12 +36,12 @@ def configMain(cfg: DictConfig) -> None:
     convertedCfg = OmegaConf.to_yaml(cfg)
 
     # Create objects from hydra config
-    dataset = createObjectfromConfig(cfg.dataset)
-    dataloader = createObjectfromConfig(cfg.dataloader, dataset=dataset)
-    loss = createObjectfromConfig(cfg.loss)
-    model = createObjectfromConfig(cfg.model)
-    optimizer = createObjectfromConfig(cfg.optimizer, params=model.parameters())
-    modelHyperaparemeters = createObjectfromConfig(cfg.hyperaparams)
+    dataset = CreateObjectfromConfig(cfg.dataset)
+    dataloader = CreateObjectfromConfig(cfg.dataloader, dataset=dataset)
+    loss = CreateObjectfromConfig(cfg.loss)
+    model = CreateObjectfromConfig(cfg.model)
+    optimizer = CreateObjectfromConfig(cfg.optimizer, params=model.parameters())
+    modelHyperaparemeters = CreateObjectfromConfig(cfg.hyperaparams)
 
     # Create dispatch params
     dispatchParams = DispatchParams(

@@ -62,7 +62,7 @@ _DECLARED_OBJECTS_: list[_NNBaseClass] = []
     Meta class of every class in NN library
 """
 
-_VERBOSE_METACLASS: bool = True  # TODO: make this configurable
+_VERBOSE_METACLASS: bool = False  # TODO: make this configurable
 
 
 class _NNMetaClass(type):
