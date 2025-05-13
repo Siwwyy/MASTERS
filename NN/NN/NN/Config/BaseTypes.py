@@ -1,10 +1,9 @@
 from __future__ import annotations
 from typing import Callable, Union, Annotated, Mapping, Any
 from pathlib import Path
-from .ConfigUtils import try_gpu
+from NN.Config.ConfigUtils import try_gpu
 
 import torch
-import types
 
 __all__ = [
     "TensorType",

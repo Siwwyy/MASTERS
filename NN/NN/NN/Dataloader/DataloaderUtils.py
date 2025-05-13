@@ -9,8 +9,8 @@ import pandas as pd
 from dataclasses import dataclass
 
 from torch._prims_common import DeviceLikeType
-from Config import TensorType, PathType
-from Config.BaseTypes import CurrentDevice
+from NN.Config import TensorType, PathType
+from NN.Config.BaseTypes import CurrentDevice
 
 __all__ = [
     "TensorDataTypeFP16",
