@@ -1,0 +1,8 @@
+
+# Copyright, Damian Andrysiak 2025 XXI. century
+# Properties of npy conversion pipeline
+
+func:
+  _target_: NN.Dataset.NPY.generate_npy.classic_npy_pipeline
+  _partial_: True
+scenes_divisor: 64 # each scene will be automatically divided by `scenes_divisor` into sections, every section with length == `scenes_divisor`

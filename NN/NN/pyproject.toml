@@ -1,0 +1,21 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "NN"
+version = "v1.0"
+requires-python = ">= 3.9"
+authors = [
+    {name = "Damian", last_name="Andrysiak", email = "andrydamian@gmail.com"}
+]
+license = {text = "MIT"}
+readme = "README.md"
+
+[project.gui-scripts]
+test = "test:main_test"
+
+[tool.black]
+line-length = 88
+target-version = ['py39']
+include = '\.pyi?$'

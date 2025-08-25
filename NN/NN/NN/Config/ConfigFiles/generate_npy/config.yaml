@@ -1,0 +1,10 @@
+
+# Copyright, Damian Andrysiak 2025 XXI. century
+
+#Main config of generate npy, used for specifying rest of configuration file tree
+
+defaults:
+  # - _self_ 
+  - npy_generator: classic_npy_pipeline # npy generator
+  - scenes: [MLForest]
+  # - _self_ -> by default, if not specified, self is added at the end of defaults: config

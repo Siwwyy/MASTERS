@@ -1,0 +1,30 @@
+# Copyright, Damian Andrysiak 2024 XXI. century
+
+#Main config, used for specifying rest of configuration file tree
+
+defaults:
+    # - _self_
+    - dataset: DatasetUE
+    - dataloader: PytorchDataloader
+    - loss: MSE
+    - optimizer: SGD
+    - model: ModelKPN  
+    # - _self_ -> by default, if not specified, self is added at the end of defaults: config
+
+hyperaparams:
+    _target_: NN.Config.ConfigUtils.TrainingConfig.ModelHyperparameters      
+    inChannels: 3
+    outChannels: 3
+    learningRate: 0.001
+    batchSize: 12
+    numEpochs: 15
+
+# dataset: UE
+# - model: Default_Description
+# - loss: Default_Description
+# - optimizer: Default_Description
+
+# loss:
+#   reduction: "sum"    
+
+# loss: ABCD
