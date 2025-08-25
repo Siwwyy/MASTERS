@@ -41,11 +41,11 @@ class InputProcessing(_NNBaseClass):
         ), f"Forward function params must be in NCHW (dim==4), but got input: {input.dim()} and warpedOutput: {warpedOutput.dim()}"
         grayScaleInput = rgbToGrayScale(input)
         gradMagnitude = calculateGradientMagnitude(
-            input, _AVAILABLE_KERNELS["sobelKernel"]
+            grayScaleInput, _AVAILABLE_KERNELS["sobelKernel"]
         )
 
         return torch.cat(
-            [grayScaleInput, warpedOutput], dim=-3
+            [gradMagnitude, warpedOutput], dim=-3
         )  # assuming NCHW, concatenate through C channel i.e., -3/1st
 
 

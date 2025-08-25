@@ -42,7 +42,7 @@ DictType = dict
 """ 
     Currently used device
 """
-CurrentDevice: torch.device = try_gpu(gpu_idx=0)
+CurrentDevice: torch.device = try_gpu(gpu_idx=4)
 
 ################################################
 # Metaclass, base class, decorators etc. section
