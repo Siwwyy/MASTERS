@@ -20,6 +20,28 @@ For Windows Powershell:
 For more informations, visit:
 https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html
 
+### Env creation
+1. Create Environment (u can use pytorch_env as name or any other arbitrary name u like):
+
+    - `micromamba create -n pytorch_env`
+
+    - `micromamba activate pytorch_env`
+
+2. Install packages:
+    - Pytorch
+        - For Windows:
+
+        - For Linux:
+            - (AMD GPU) `pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/rocm6.3` 
+            - (NVIDIA GPU) `pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128`
+    - Hydra: `pip install hydra-core --upgrade`
+    - Pandas: `pip install pandas`
+    - OpenEXR: `pip install OpenEXR`
+
+3. Install <b>NN project </b> (operation should be done at level directory within pyproject.toml): `pip install .`
+
+
+
 ## Pre Commit hook installation
 After cloning the repo, type (your local python version should match with language_version defined in pre commit hook):
 

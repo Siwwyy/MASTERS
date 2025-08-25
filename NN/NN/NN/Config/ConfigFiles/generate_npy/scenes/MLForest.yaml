@@ -1,0 +1,19 @@
+root_dir: R"/home/dandrysi/WORK/DATA/2025.04.29_MLForest_Character_IGR"
+dataset_source: UnrealEngine_NSSD
+input_dirs:
+  512_512_1spp_60fps:
+    buffers: ["Velocity", "Depth"]
+  960_540_1spp_60fps:
+    buffers: ["Velocity", "Depth"]
+  1920_1080_1spp_60fps:
+    buffers: ["Velocity", "Depth"]
+target_dirs:
+  3840_2160_512spp_60fps:
+    buffers: ["Color"]
+scenes:
+  train:
+    - [64, 499]
+  valid:
+    - [500, 799]
+  test:
+    - [800, 959]

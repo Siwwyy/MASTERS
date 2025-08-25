@@ -1,33 +1,30 @@
 # Neural Network Engine
 
+from functools import partial
+from NN.Config.ConfigUtils.Utils import CreateObjectfromConfig
 import hydra
+import torch
+
 from omegaconf import DictConfig, OmegaConf
 from hydra import compose, initialize
-from typing import TypeVar
+from typing import TypeVar, Union
 
 from pathlib import Path
-from Config.BaseTypes import (
+from NN.Config.BaseTypes import (
     _DECLARED_CLASSES_,
     _DECLARED_OBJECTS_,
     PathType,
     _NNBaseClass,
 )
-from Dataset import DatasetUE
-from Loss import MSELoss
-
-# from ImageProcessing import *
-
-T_co = TypeVar("T_co", covariant=True)
-T = TypeVar("T", bound=_NNBaseClass)
-
-
-def createObjectfromConfig(cfg: DictConfig) -> T:
-    return hydra.utils.instantiate(cfg)
+from NN.Config.ConfigUtils.TrainingConfig import DispatchParams, ModelHyperparameters
+from NN.TrainingPipeline import dispatchTraining
+from NN.Dataset import DatasetUE
+from NN.Loss import MSELoss
 
 
 _HYDRA_PARAMS = {
     "version_base": "1.3",
-    "config_path": "Config/ConfigFiles",
+    "config_path": "NN/Config/ConfigFiles",
     "config_name": "config.yaml",
 }
 
@@ -38,17 +35,25 @@ def configMain(cfg: DictConfig) -> None:
     print(OmegaConf.to_yaml(cfg))
     convertedCfg = OmegaConf.to_yaml(cfg)
 
-    # datasetType = cfg['dataset']
+    # Create objects from hydra config
+    dataset = CreateObjectfromConfig(cfg.dataset)
+    dataloader = CreateObjectfromConfig(cfg.dataloader, dataset=dataset)
+    loss = CreateObjectfromConfig(cfg.loss)
+    model = CreateObjectfromConfig(cfg.model)
+    optimizer = CreateObjectfromConfig(cfg.optimizer, params=model.parameters())
+    modelHyperaparemeters = CreateObjectfromConfig(cfg.hyperaparams)
 
-    # abc  = datasetType['_class_name_'](datasetType['datasetRootPath'], datasetType['csvPath'])
-    dataset = createObjectfromConfig(cfg.dataset)
-    loss = createObjectfromConfig(cfg.loss)
-    # abc  = DatasetUE()
+    # Create dispatch params
+    dispatchParams = DispatchParams(
+        modelHyperaparemeters, dataset, dataloader, loss, optimizer, model
+    )
+
+    # Training dispatch
+    dispatchTraining(dispatchParams)
 
 
 if __name__ == "__main__":
     configMain()
-    # print("END")
 
 
 # # the metaclass will automatically get passed the same argument

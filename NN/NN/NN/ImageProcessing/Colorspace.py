@@ -1,7 +1,7 @@
-from typing import Union
-from Config.BaseTypes import TensorType
-
 import torch
+
+from typing import Union
+from NN.Config.BaseTypes import TensorType
 
 __all__ = [
     "rgbToGrayScale",
@@ -138,7 +138,7 @@ def detonemapReinhard_(tensor: TensorType) -> TensorType:
 
 # Gamma curve adjustments to get sRGB colorspace
 def gammaCorrection(
-    tensor: TensorType, gammaCoefficient: Union[TensorType, float] = _GAMMA_COEFFICIENT
+    tensor: TensorType, gammaCoefficient: float = _GAMMA_COEFFICIENT
 ) -> TensorType:
     r"""
     https://learnopengl.com/Advanced-Lighting/Gamma-Correction
@@ -155,9 +155,4 @@ def gammaCorrection(
     -------
         Gamma corrected image in CHW/NCHW shape.
     """
-    assert (
-        gammaCoefficient.dim() > 1
-    ), "gammaCoefficient should be a scalar, but has {} shape".format(
-        gammaCoefficient.size()
-    )
-    return torch.pow(tensor, gammaCoefficient.item())
+    return torch.pow(tensor, gammaCoefficient)

@@ -1,5 +1,5 @@
-from Dataset.DatasetBase import DatasetBase
-from Config import TensorType, PathType
+from NN.Dataset.DatasetBase import DatasetBase
+from NN.Config import TensorType, PathType
 from collections import namedtuple
 
 import torch
@@ -29,7 +29,8 @@ class DatasetUE(DatasetBase):
         self,
         datasetRootPath: PathType = None,
         csvPath: PathType | None = None,
-        cropCoords: tuple[int, int, int, int] | None = None,
+        cropCoords_lr: tuple[int, int, int, int] | None = None,
+        cropCoords_hr: tuple[int, int, int, int] | None = None,
         transforms: torchvision.transforms.Compose | None = None,
     ):
         super().__init__(datasetRootPath, transforms)
@@ -41,14 +42,22 @@ class DatasetUE(DatasetBase):
             ["x_min", "y_min", "x_max", "y_max"],
             defaults=["0", "0", "64", "64"],
         )
-        self.cropCoords = cropCoordsTuple()
-        if cropCoords is not None:
-            self.cropCoords = cropCoordsTuple(*cropCoords)
 
-    # def __len__(self) -> int:
-    #     return self.datasetSize
+        # Cropping
+        self.crop_coords_lr = cropCoordsTuple()
+        if cropCoords_lr is None:
+            self.crop_coords_lr = cropCoordsTuple(cropCoords_lr)
+        if cropCoords_hr is None:
+            self.cropCoords_hr = cropCoordsTuple(cropCoords_lr)
+
+    def __len__(self) -> int:
+        return self.datasetSize
 
     def __getitem__(self, idx: int = None) -> TensorType:
-        assert idx is not None, "Index value can't be None! Should be an integer"
-        assert idx < self.__len__(), "Index out of bound"
+        super().__getitem__(idx)
         return torch.zeros(1, 64, 64)
+
+
+if __name__ == "__main__":
+    # pass
+    abc = DatasetUE("DDD", "DDD")

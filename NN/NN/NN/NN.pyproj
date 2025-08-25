@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>3cb52152-466e-4349-893e-1b22633ae863</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>NeuralNetworkArchitecture\ModelKPN.py</StartupFile>
+    <StartupFile>ImageProcessing\ImageTransform.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -23,6 +23,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Config\BaseTypes.py" />
+    <Compile Include="Config\ConfigFiles\Optimizer\SGD.yaml" />
+    <Compile Include="Config\ConfigUtils\TrainingConfig.py" />
     <Compile Include="Config\ConfigUtils\Utils.py" />
     <Compile Include="Config\ConfigUtils\__init__.py" />
     <Compile Include="Config\__init__.py" />
@@ -38,21 +40,28 @@
     <Compile Include="Dataset\__init__.py" />
     <Compile Include="ImageProcessing\ColorSpace.py" />
     <Compile Include="ImageProcessing\ImageGradient.py" />
+    <Compile Include="ImageProcessing\ImageTransform.py" />
     <Compile Include="ImageProcessing\__init__.py" />
     <Compile Include="Loss\LossBase.py" />
     <Compile Include="Loss\MSELoss.py" />
     <Compile Include="Loss\__init__.py" />
+    <Compile Include="Misc\TemporalAA.py" />
+    <Compile Include="Misc\__init__.py" />
     <Compile Include="NeuralNetworkArchitecture\ModelBase.py" />
     <Compile Include="NeuralNetworkArchitecture\ModelKPN.py" />
     <Compile Include="NeuralNetworkArchitecture\__init__.py" />
     <Compile Include="NN.py" />
+    <Compile Include="Open3D\Visualization.py" />
+    <Compile Include="Open3D\__init__.py" />
     <Compile Include="TrainingPipeline\TrainingPipeline.py" />
+    <Compile Include="TrainingPipeline\__init__.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Config\ConfigFiles\" />
     <Folder Include="Config\ConfigFiles\Dataset\" />
     <Folder Include="Config\ConfigFiles\Loss\" />
     <Folder Include="Config\ConfigFiles\Model\" />
+    <Folder Include="Config\ConfigFiles\Dataloader\" />
     <Folder Include="Config\ConfigFiles\Optimizer\" />
     <Folder Include="Config\ConfigUtils\" />
     <Folder Include="CustomKernels\Kernels\AddKernel\" />
@@ -66,14 +75,18 @@
     <Folder Include="Dataloader\" />
     <Folder Include="Loss\" />
     <Folder Include="ImageProcessing\" />
+    <Folder Include="Misc\" />
+    <Folder Include="Open3D\" />
     <Folder Include="TrainingPipeline\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Config\ConfigFiles\config.yaml" />
+    <Content Include="Config\ConfigFiles\Dataloader\PytorchDataloader.yaml" />
     <Content Include="Config\ConfigFiles\Loss\ABCD.yaml" />
     <Content Include="Config\ConfigFiles\Dataset\DatasetUE.yaml" />
     <Content Include="Config\ConfigFiles\Loss\MAE.yaml" />
     <Content Include="Config\ConfigFiles\Loss\MSE.yaml" />
+    <Content Include="Config\ConfigFiles\Model\ModelKPN.yaml" />
     <Content Include="CustomKernels\Kernels\AddKernel\addKernel_cuda_kernel.cu" />
     <Content Include="CustomKernels\Kernels\AddKernel\addKernel_cuda.cpp" />
   </ItemGroup>

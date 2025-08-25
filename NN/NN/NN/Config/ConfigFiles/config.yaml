@@ -5,11 +5,20 @@
 defaults:
     # - _self_
     - dataset: DatasetUE
-    # - model: Default_Description
+    - dataloader: PytorchDataloader
     - loss: MSE
-    # - optimizer: Default_Description
+    - optimizer: SGD
+    - model: ModelKPN  
     # - _self_ -> by default, if not specified, self is added at the end of defaults: config
-  
+
+hyperaparams:
+    _target_: NN.Config.ConfigUtils.TrainingConfig.ModelHyperparameters      
+    inChannels: 3
+    outChannels: 3
+    learningRate: 0.001
+    batchSize: 12
+    numEpochs: 15
+
 # dataset: UE
 # - model: Default_Description
 # - loss: Default_Description

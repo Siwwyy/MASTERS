@@ -1,5 +1,5 @@
-from .ModelBase import ModelBase
-from .ModelKPN import ModelKPN
+from NN.NeuralNetworkArchitecture.ModelBase import ModelBase
+from NN.NeuralNetworkArchitecture.ModelKPN import ModelKPN
 
 __all__ = ["ModelBase", "ModelBase"]
 

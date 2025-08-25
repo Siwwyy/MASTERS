@@ -1,18 +1,17 @@
-from dataclasses import dataclass
-from functools import partial
-from turtle import width
-from typing import Mapping, Union
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from abc import ABCMeta, abstractmethod
-
+from dataclasses import dataclass
+from functools import partial
+from typing import Mapping, Union
 from torch.nn.modules import activation
-from Config import TensorType, ShapeType, _NNBaseClass
-from ImageProcessing.Colorspace import rgbToGrayScale
-from ImageProcessing.ImageGradient import calculateGradientMagnitude, _AVAILABLE_KERNELS
-from Dataloader import saveEXR
+from NN.Config import TensorType, ShapeType, _NNBaseClass
+from NN.ImageProcessing.Colorspace import rgbToGrayScale
+from NN.ImageProcessing.ImageGradient import (
+    calculateGradientMagnitude,
+    _AVAILABLE_KERNELS,
+)
 
 """
 A Reduced-Precision Network for Image Reconstruction (QWNET)
@@ -31,7 +30,7 @@ class InputProcessing(_NNBaseClass):
     """
 
     def __init__(self):
-        pass
+        super().__init__()
 
     def forward(
         self, input: TensorType = None, warpedOutput: TensorType = None
@@ -42,11 +41,11 @@ class InputProcessing(_NNBaseClass):
         ), f"Forward function params must be in NCHW (dim==4), but got input: {input.dim()} and warpedOutput: {warpedOutput.dim()}"
         grayScaleInput = rgbToGrayScale(input)
         gradMagnitude = calculateGradientMagnitude(
-            input, _AVAILABLE_KERNELS["sobelKernel"]
+            grayScaleInput, _AVAILABLE_KERNELS["sobelKernel"]
         )
 
         return torch.cat(
-            [grayScaleInput, warpedOutput], dim=-3
+            [gradMagnitude, warpedOutput], dim=-3
         )  # assuming NCHW, concatenate through C channel i.e., -3/1st
 
 
@@ -55,7 +54,12 @@ class EncoderBlock(_NNBaseClass):
     EncoderBlock
     """
 
-    def __init__(self, layers: Union[nn.ModuleDict, Mapping] | None = None):
+    def __init__(
+        self,
+        layers: Union[nn.ModuleDict, Mapping] | None = None,
+        inChannels: int = 3,
+        outChannels: int = 3,
+    ):
         super().__init__()
         self.layers = layers
         if self.layers is None:
@@ -64,14 +68,18 @@ class EncoderBlock(_NNBaseClass):
                     # for now, these are the same, but in future change conv3x3 to
                     # 1conv3x3, 2conv3x3 etc. if the names are the same
                     "conv3x3_1": nn.Conv2d(
-                        in_channels=3, out_channels=3, kernel_size=(3, 3)
+                        in_channels=inChannels,
+                        out_channels=inChannels,
+                        kernel_size=(3, 3),
                     ),  # TODO how many channels are in/out, for now keep 3 as we operate on RGB data
-                    "batchNorm_1": nn.BatchNorm2d(num_features=3),
+                    "batchNorm_1": nn.BatchNorm2d(num_features=inChannels),
                     "elu_1": nn.ELU(),
                     "conv3x3_2": nn.Conv2d(
-                        in_channels=3, out_channels=3, kernel_size=(3, 3)
+                        in_channels=inChannels,
+                        out_channels=outChannels,
+                        kernel_size=(3, 3),
                     ),  # TODO how many channels are in/out, for now keep 3 as we operate on RGB data
-                    "batchNorm_2": nn.BatchNorm2d(num_features=3),
+                    "batchNorm_2": nn.BatchNorm2d(num_features=outChannels),
                     "elu_2": nn.ELU(),
                     "maxPool2x2": nn.MaxPool2d(kernel_size=(2, 2)),
                 }
@@ -101,21 +109,28 @@ class DecoderBlock(_NNBaseClass):
     def __init__(
         self,
         layers: Union[nn.ModuleDict, Mapping] | None = None,
+        inChannels: int = 3,
+        outChannels: int = 3,
         upsampleBlockType: str = "nearest",
     ):
+        super().__init__()
         self.layers = layers
         if self.layers is None:
             self.layers = nn.ModuleDict(
                 {
                     "conv1x1_1": nn.Conv2d(
-                        in_channels=3, out_channels=3, kernel_size=(1, 1)
+                        in_channels=inChannels,
+                        out_channels=inChannels,
+                        kernel_size=(1, 1),
                     ),  # TODO how many channels are in/out, for now keep 3 as we operate on RGB data
-                    "batchNorm_1": nn.BatchNorm2d(num_features=3),
+                    "batchNorm_1": nn.BatchNorm2d(num_features=inChannels),
                     "elu_1": nn.ELU(),
                     "conv3x3_2": nn.Conv2d(
-                        in_channels=3, out_channels=3, kernel_size=(3, 3)
+                        in_channels=inChannels,
+                        out_channels=outChannels,
+                        kernel_size=(3, 3),
                     ),  # TODO how many channels are in/out, for now keep 3 as we operate on RGB data
-                    "batchNorm_2": nn.BatchNorm2d(num_features=3),
+                    "batchNorm_2": nn.BatchNorm2d(num_features=outChannels),
                     "elu_2": nn.ELU(),
                 }
             )
@@ -148,6 +163,7 @@ class InputFilter(_NNBaseClass):
     """
 
     def __init__(self):
+        super().__init__()
 
         self.conv1x1 = nn.Conv2d(
             in_channels=3, out_channels=18, kernel_size=(1, 1)
@@ -179,12 +195,13 @@ class InputFilter(_NNBaseClass):
             self.conv1x1(inputFeatureExtraction)
         )  # conv1x1 + softmax
 
-        self.filter3x3_1 = filterWeights2x3x3[:8]  # from [0 to 8)
-        self.filter3x3_2 = filterWeights2x3x3[8:]  # from [8 to 17)
+        # TODO shape here will be invalid for sure!
+        self.filter3x3_1 = filterWeights2x3x3[:9]  # from [0 to 9)
+        self.filter3x3_2 = filterWeights2x3x3[9:]  # from [9 to 17)
 
-        # Make sure i.e., device, dtype are ok
-        self.filter3x3_1.to(input)
-        self.filter3x3_2.to(input)
+        # # Make sure i.e., device, dtype are ok
+        # self.filter3x3_1.to(input)
+        # self.filter3x3_2.to(input)
 
         # Filter1 3x3 input
         input = F.conv2d(input, self.filter3x3_1, padding="same")
@@ -204,6 +221,7 @@ class Filter(_NNBaseClass):
     """
 
     def __init__(self):
+        super().__init__()
 
         self.conv1x1 = nn.Conv2d(
             in_channels=3, out_channels=9, kernel_size=(1, 1)
@@ -231,7 +249,7 @@ class Filter(_NNBaseClass):
         self.filter3x3 = filterWeights1x3x3  # from [0 to 8)
 
         # Make sure i.e., device, dtype are ok
-        self.filter3x3.to(input)
+        # self.filter3x3.to(input)
 
         # Filter 3x3
         input = F.conv2d(input, self.filter3x3, padding="same")
@@ -248,6 +266,7 @@ class FilterPlusSkip(_NNBaseClass):
     """
 
     def __init__(self, upsampleBlockType: str = "nearest"):
+        super().__init__()
 
         self.conv1x1 = nn.Conv2d(
             in_channels=3, out_channels=10, kernel_size=(1, 1)
@@ -281,8 +300,8 @@ class FilterPlusSkip(_NNBaseClass):
         self.multiplier = filterWeights1x3x3[9]  # from 9th
 
         # Make sure i.e., device, dtype are ok
-        self.filter3x3.to(input)
-        self.multiplier.to(input)
+        # self.filter3x3.to(input)
+        # self.multiplier.to(input)
 
         # Upsample2x2 + Filter 3x3
         input = self.upsampleLayer(input)
@@ -303,8 +322,8 @@ class ModelKPNInputs:
     Dataclass which encapsulates additional input informations to the model
     """
 
-    inputShape: ShapeType = (1, 3, 1920, 1080)  # NCHW
-    outputShape: ShapeType = (1, 3, 1920, 1080)  # NCHW
+    inputShape: ShapeType = (1, 3, 256, 256)  # NCHW
+    outputShape: ShapeType = (1, 3, 256, 256)  # NCHW
 
 
 class ModelKPN(_NNBaseClass):
@@ -314,11 +333,98 @@ class ModelKPN(_NNBaseClass):
 
     def __init__(self, name: str = "ModelKPN", modelInputs: ModelKPNInputs = None):
         super().__init__()
-        self.name = name
-        self.inputShape = modelInputs.inputShape
 
-    def forward(self, x: TensorType = None) -> TensorType:
+        self.name = name
+
+        ##############################
+        # Feature Extraction (U-Net) #
+        ##############################
+
+        # Input Processing
+        self.inputProcessing = InputProcessing()
+
+        # Encoder Block
+        self.encoderBlock1 = EncoderBlock(layers=None, inChannels=8, outChannels=32)
+        self.encoderBlock2 = EncoderBlock(layers=None, inChannels=32, outChannels=64)
+        self.encoderBlock3 = EncoderBlock(layers=None, inChannels=64, outChannels=96)
+        self.encoderBlock4 = EncoderBlock(layers=None, inChannels=96, outChannels=128)
+        self.encoderBlock5 = EncoderBlock(layers=None, inChannels=128, outChannels=160)
+
+        # Decoder Block
+        self.decoderBlock1 = DecoderBlock(layers=None, inChannels=160, outChannels=128)
+        self.decoderBlock2 = DecoderBlock(layers=None, inChannels=128, outChannels=96)
+        self.decoderBlock3 = DecoderBlock(layers=None, inChannels=96, outChannels=64)
+        self.decoderBlock4 = DecoderBlock(layers=None, inChannels=64, outChannels=32)
+
+        ##############################
+        #       Filter Network       #
+        ##############################
+
+        # Input Filter
+        self.inputFilter = InputFilter()
+
+        # Filter
+        self.filter1 = Filter()
+        self.filter2 = Filter()
+        self.filter3 = Filter()
+        self.filter4 = Filter()
+
+        # Filter + Skip
+        self.filterPlusSkip1 = FilterPlusSkip()
+        self.filterPlusSkip2 = FilterPlusSkip()
+        self.filterPlusSkip3 = FilterPlusSkip()
+        self.filterPlusSkip4 = FilterPlusSkip()
+
+    def forward(
+        self, x: TensorType = None, warped_output: TensorType = None
+    ) -> TensorType:
         assert x is not None, "Input tensor X can't be None!"
+
+        # Feature Extractor
+        out_fe = self.inputProcessing(x, warped_output)
+
+        #
+        out_fe, skip_encoderBlock1 = self.encoderBlock1(out_fe)
+        out_fe, skip_encoderBlock2 = self.encoderBlock2(out_fe)
+        out_fe, skip_encoderBlock3 = self.encoderBlock3(out_fe)
+        out_fe, skip_encoderBlock4 = self.encoderBlock4(out_fe)
+        out_fe, act1 = self.encoderBlock5(
+            out_fe
+        )  # TODO check activations skip-connection
+
+        #
+        out_db1 = self.decoderBlock1(out_fe, skip_encoderBlock4)
+        out_db2 = self.decoderBlock2(out_db1, skip_encoderBlock3)
+        out_db3 = self.decoderBlock3(out_db2, skip_encoderBlock2)
+        out_db4 = self.decoderBlock4(out_db3, skip_encoderBlock1)
+
+        # Filter Network
+        out_fn, skip_inputFilter = self.inputFilter(x, warped_output, out_db4)
+
+        #
+        out_fn, skip_filter1 = self.filter1(out_fn, out_db3)
+        out_fn, skip_filter2 = self.filter2(out_fn, out_db2)
+        out_fn, skip_filter3 = self.filter3(out_fn, out_db1)
+        out_fn, _ = self.filter4(out_fn, act1)
+
+        #
+        out_fn = self.filterPlusSkip1(out_fn, out_db1, skip_filter3)
+        out_fn = self.filterPlusSkip2(out_fn, out_db2, skip_filter2)
+        out_fn = self.filterPlusSkip3(out_fn, out_db3, skip_filter1)
+        out_fn = self.filterPlusSkip4(out_fn, out_db4, skip_inputFilter)
+
+        return out_fn  # output RGB
 
     def __repr__(self):
         return self.name
+
+
+if __name__ == "__main__":
+
+    model_inputs = ModelKPNInputs()
+
+    # Test
+    x = torch.randn((1, 3, 64, 64))
+    model = ModelKPN(modelInputs=model_inputs)
+    pred = model(x)
+    assert pred.shape == x.shape

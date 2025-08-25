@@ -1,5 +1,5 @@
-from .Colorspace import *
-from .ImageGradient import *
+from NN.ImageProcessing.Colorspace import *
+from NN.ImageProcessing.ImageGradient import *
 
 
 __all__ = ["ColorSpace", "ImageGradient"]
