@@ -4,6 +4,7 @@
 
 Super-Resolution UNET Based NN architecture and more!
 
+See NN/ folder for further information!
 
 ## Environment setup
 
