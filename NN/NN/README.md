@@ -23,22 +23,30 @@ https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html
 ### Env creation
 1. Create Environment (u can use pytorch_env as name or any other arbitrary name u like):
 
-    - `micromamba create -n pytorch_env`
+    - `micromamba create -n pytorch_env python=3.11`
 
     - `micromamba activate pytorch_env`
+
+Be careful of python version you will be using, some packages might be unavailable!
 
 2. Install packages:
     - Pytorch
         - For Windows:
-
+            - (NVIDIA GPU) `pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128`
+            
         - For Linux:
             - (AMD GPU) `pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/rocm6.3` 
             - (NVIDIA GPU) `pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128`
-    - Hydra: `pip install hydra-core --upgrade`
-    - Pandas: `pip install pandas`
-    - OpenEXR: `pip install OpenEXR`
+    - CuPy
+        - For Windows:
+            - (NVIDIA GPU) `pip install cupy==13.6.0`
 
-3. Install <b>NN project </b> (operation should be done at level directory within pyproject.toml): `pip install .`
+        - For Linux: 
+            - (NVIDIA GPU) `pip install cupy==13.6.0`
+            
+    - For rest packages, please use `pyproject.toml`
+
+3. Install <b>NN project</b> (operation should be done at level directory within pyproject.toml): `pip install .`
 
 
 
