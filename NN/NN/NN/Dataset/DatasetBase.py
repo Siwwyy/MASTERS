@@ -14,7 +14,7 @@ class DatasetBase(_NNBaseClass):
 
     Attributes
     ----------
-    datasetRootPath : PathType (Union[str, Path])
+    dataset_root_path : PathType (Union[str, Path])
         Root path to dataset
     transforms: torchvision.transforms.Compose
         optional composed torchvision's tranforms, if not specified, transform == identity transform
@@ -23,14 +23,14 @@ class DatasetBase(_NNBaseClass):
 
     def __init__(
         self,
-        datasetRootPath: PathType = None,
+        dataset_root_path: PathType = None,
         transforms: torchvision.transforms.Compose | None = None,
     ):
-        assert datasetRootPath is not None, "Dataset root path can't be None!"
+        assert dataset_root_path is not None, "Dataset root path can't be None!"
         super().__init__()
 
-        self.datasetRootPath = datasetRootPath
-        self.datasetSize = 1  # set always to 1 by default, because otherwise dataloader will raise an error
+        self.dataset_root_path = dataset_root_path
+        self.dataset_size = 1  # set always to 1 by default, because otherwise dataloader will raise an error
 
         # if tranforms has been not specified, then use Identity transform
         # x == id(x)

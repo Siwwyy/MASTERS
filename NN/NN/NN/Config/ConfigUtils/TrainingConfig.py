@@ -59,9 +59,11 @@ class DispatchParams(_ParamsBase):
         }
 
     def __repr__(self):
-        return f"""Hyperparams {self.hyperparams} |
-                 Dataset {self.dataset} |
-                 Dataloader {self.dataloader} |
-                 Loss {self.loss} |
-                 Optimizer {self.optimizer} |
-                 Model {self.model} |"""
+        return f"""\n==========================================================================\n
+Hyperparams: {self.hyperparams}
+Dataset: {self.dataset}
+Dataloader: {self.dataloader}
+Loss: {self.loss}
+Optimizer: {self.optimizer}
+Model: {self.model}
+\n==========================================================================\n"""

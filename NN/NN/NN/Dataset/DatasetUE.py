@@ -1,9 +1,18 @@
+import pandas as pd
 from NN.Dataset.DatasetBase import DatasetBase
 from NN.Config import TensorType, PathType
-from collections import namedtuple
 
 import torch
 import torchvision
+
+
+class SceneUE:
+    """
+    Encapsulates Scene properties etc. for single film/project of Unreal Engine
+    """
+
+    def __init__(self):
+        pass
 
 
 class DatasetUE(DatasetBase):
@@ -26,14 +35,17 @@ class DatasetUE(DatasetBase):
     def __init__(
         self,
         dataset_root_path: PathType = None,
-        csv_path: PathType | None = None,
         transforms: torchvision.transforms.Compose | None = None,
     ):
         super().__init__(dataset_root_path, transforms)
-        self.csv_path = csv_path if csv_path is not None else dataset_root_path
+
+        # load csv
+        # assert csv_path is not None, "Csv path is None!"
+        # self.csv_path = csv_path
+        # self.frame_details_df: pd.DataFrame = pd.read_csv(self.csv_path)
 
     def __len__(self) -> int:
-        return self.datasetSize
+        return self.dataset_size
 
     def __getitem__(self, idx: int = None) -> TensorType:
         super().__getitem__(idx)

@@ -1,6 +1,6 @@
 # Copyright, Damian Andrysiak 2024 XXI. century
 
 _target_: NN.Dataset.DatasetUE
-datasetRootPath: R"/home/dandrysi/WORK/DATA/"
-croop_coords_lr: [1000,1000,1128,1128]
-croop_coords_hr: [1000,1000,1256,1256] 
+dataset_root_path: "/home/dandrysi/WORK/DATA/"
+# scenes: 
+#   - 2025.04.29_MLForest_Character_IGR

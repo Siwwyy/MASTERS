@@ -2,7 +2,7 @@
 
 _target_: torch.utils.data.dataloader.DataLoader
 dataset: !!null
-batch_size: ${hyperaparams.batchSize}
+batch_size: ${..hyperparams.batchSize}
 shuffle: True
 num_workers: 1
 pin_memory: False

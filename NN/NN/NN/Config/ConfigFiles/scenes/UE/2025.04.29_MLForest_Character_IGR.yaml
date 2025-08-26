@@ -1,0 +1,24 @@
+directory_properties:
+  folders: ['1920_1080_1spp_60fps', 
+            '3840_2160_512spp_60fps',
+            '512_512_1spp_60fps',
+            '960_540_1spp_60fps']
+  csv_name: 'metadata.csv'
+
+buffer_properties:
+  buffers_prefix: ['Color', 'Depth', 'Velocity']
+  color_space: 'HDR' # or LDR
+  mv_scale: [-2.0, 2.0] # respectively x,y Axis
+  mv_space: 'Pixel' # or NDC
+  depth_space: 'Linear' # or NDC
+
+metadata_properties:
+  columns_name: ['viewmat', 'projmat']
+
+scenes_properties:
+  train_scenes: 
+    - [80, 400]
+  valid_scenes:
+    - [400, 600]
+  test_scenes:
+    - [600, 700]

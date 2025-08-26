@@ -1,21 +1,12 @@
 # Neural Network Engine
 
-from functools import partial
-from NN.Config.ConfigUtils.Utils import CreateObjectfromConfig
 import hydra
-import torch
 
+from functools import partial
 from omegaconf import DictConfig, OmegaConf
-from hydra import compose, initialize
-from typing import TypeVar, Union
 
-from pathlib import Path
-from NN.Config.BaseTypes import (
-    _DECLARED_CLASSES_,
-    _DECLARED_OBJECTS_,
-    PathType,
-    _NNBaseClass,
-)
+from NN.Config.ConfigUtils.Utils import CreateObjectfromConfig
+from NN.Dataset import create_dataset
 from NN.Config.ConfigUtils.TrainingConfig import DispatchParams, ModelHyperparameters
 from NN.TrainingPipeline import dispatchTraining
 from NN.Dataset import DatasetUE
@@ -30,22 +21,22 @@ _HYDRA_PARAMS = {
 
 
 @hydra.main(**_HYDRA_PARAMS)
-def configMain(cfg: DictConfig) -> None:
+def config_main(cfg: DictConfig) -> None:
     print(cfg)
     print(OmegaConf.to_yaml(cfg))
     convertedCfg = OmegaConf.to_yaml(cfg)
 
     # Create objects from hydra config
-    dataset = CreateObjectfromConfig(cfg.dataset)
+    dataset = create_dataset(cfg.dataset)
     dataloader = CreateObjectfromConfig(cfg.dataloader, dataset=dataset)
     loss = CreateObjectfromConfig(cfg.loss)
     model = CreateObjectfromConfig(cfg.model)
     optimizer = CreateObjectfromConfig(cfg.optimizer, params=model.parameters())
-    modelHyperaparemeters = CreateObjectfromConfig(cfg.hyperaparams)
+    model_hyperaparemeters = CreateObjectfromConfig(cfg.hyperparams)
 
     # Create dispatch params
     dispatchParams = DispatchParams(
-        modelHyperaparemeters, dataset, dataloader, loss, optimizer, model
+        model_hyperaparemeters, dataset, dataloader, loss, optimizer, model
     )
 
     # Training dispatch
@@ -53,7 +44,7 @@ def configMain(cfg: DictConfig) -> None:
 
 
 if __name__ == "__main__":
-    configMain()
+    config_main()
 
 
 # # the metaclass will automatically get passed the same argument
