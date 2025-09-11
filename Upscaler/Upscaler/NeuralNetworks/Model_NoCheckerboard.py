@@ -4,13 +4,11 @@ import torch.nn.functional as F
 import torchvision.transforms.functional as tvf
 import numpy as np
 
-from NeuralNetworks.NN_Base import Model_Base
-from NeuralNetworks.PreDefined_Blocks import DoubleConv, DownsampleBlock, UpscaleBlock
-from Config.Config import TensorType, ShapeType
+from NeuralNetworks.PreDefined_Blocks import DoubleConv, DownsampleBlock, UpscaleBlock, TensorType, ShapeType
 from typing import Optional, Tuple
 
 
-class Model_NoCheckerboard(Model_Base):
+class Model_NoCheckerboard(nn.Module):
     """
     UNET architecture based model
     With Upscale layers without ConvTranspose2d
@@ -30,12 +28,10 @@ class Model_NoCheckerboard(Model_Base):
 
     def __init__(
         self,
-        name: str = "Model_NoCheckerboard",
-        input_shape: ShapeType = (1, 3, 1920, 1080),
         in_channels: int = 3,
         out_channels: int = 3,
     ):
-        super().__init__(name, input_shape)
+        super().__init__()
 
         # Uniforms
         self.in_channels = in_channels
