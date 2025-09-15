@@ -4,9 +4,10 @@ import torch.nn.functional as F
 import torchvision.transforms.functional as tvf
 import numpy as np
 
-from Config.Config import TensorType, ShapeType
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
+TensorType = torch.Tensor
+ShapeType = Union[tuple, torch.Size]
 
 # UNET Based pre-defined blocks
 class DoubleConv(nn.Module):
